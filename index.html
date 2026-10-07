@@ -68,6 +68,12 @@ header nav a:hover { color: var(--red); }
 .piece.on .badge { opacity: 1; transform: none; }
 .piece .t { font: 400 clamp(1.15rem, 1.9vw, 1.5rem)/1.15 var(--display); letter-spacing: .04em; overflow-wrap: anywhere; }
 
+/* Partners */
+.partners { border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: baseline; gap: 1rem clamp(1.5rem, 4vw, 3.5rem); padding-block: clamp(1.75rem, 4vw, 2.75rem); }
+.partners .small { margin-right: auto; }
+.partners a { font: 400 clamp(1.5rem, 3.2vw, 2.4rem)/1 var(--display); letter-spacing: .06em; text-decoration: none; color: var(--fg); opacity: .75; transition: color .25s, opacity .25s; }
+.partners a:hover { color: var(--red); opacity: 1; }
+
 /* Shared section frame */
 .sec { border-top: 1px solid var(--line); padding-block: clamp(3rem, 8vw, 5.5rem); }
 .sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; margin-bottom: clamp(1.5rem, 4vw, 2.5rem); }
@@ -176,12 +182,21 @@ footer { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wr
       <canvas class="fog" id="fog" aria-hidden="true"></canvas>
       <div class="work-head"><h1>Pieces</h1><span class="small">Drag or use the arrows</span></div>
       <div class="track" id="track"></div>
-      <div class="work-foot small"><span class="count" id="count">01 / 09</span><span class="bar"><i id="bar"></i></span><span id="meta"></span><button class="wnav" id="wPrev" aria-label="Previous piece">←</button><button class="wnav" id="wNext" aria-label="Next piece">→</button></div>
+      <div class="work-foot small"><span class="count" id="count">03 / 05</span><span class="bar"><i id="bar"></i></span><span id="meta"></span><button class="wnav" id="wPrev" aria-label="Previous piece">←</button><button class="wnav" id="wNext" aria-label="Next piece">→</button></div>
     </div>
   </section>
 
+  <section class="partners" aria-label="Partners">
+    <span class="small">Partnered with</span>
+    <a href="https://runwayml.com" target="_blank" rel="noopener">Runway</a>
+    <a href="https://www.topazlabs.com" target="_blank" rel="noopener">Topaz Labs</a>
+    <a href="https://dreamina.capcut.com" target="_blank" rel="noopener">Dreamina</a>
+    <a href="https://hailuoai.video" target="_blank" rel="noopener">Hailuo</a>
+    <span class="small">and more</span>
+  </section>
+
   <section class="sec" id="index">
-    <div class="sec-head"><h2>Index</h2><span class="small">Hover to preview · select to watch</span></div>
+    <div class="sec-head"><h2>Index</h2><span class="small">More work · hover to preview</span></div>
     <div class="index">
       <ul class="rows" id="rows"></ul>
       <div class="preview" id="preview" aria-hidden="true"><span class="small" id="pvLabel"></span></div>
@@ -469,7 +484,7 @@ const all = [
   "url": "https://www.instagram.com/reel/DdQVdxhP0LU/"
  }
 ];
-const works = all.slice(0, 9);
+const works = all.slice(0, 5), rest = all.slice(5);
 
 /* Selected work: a sideways track pinned while the page scrolls */
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -499,6 +514,9 @@ function layout() {
   sec.style.height = `${innerHeight + maxX}px`;
 }
 layout(); addEventListener('resize', layout);
+function centerOn(i) { const el = cards[i]; track.scrollLeft = Math.max(0, el.offsetLeft + el.offsetWidth / 2 - track.clientWidth / 2); }
+centerOn(Math.floor(n / 2));
+addEventListener('load', () => { if (track.scrollLeft < 2) centerOn(Math.floor(n / 2)); });
 function setActive(i) {
   if (i === cur) return; cur = i;
   cards.forEach((el, k) => el.classList.toggle('on', k === i));
@@ -609,18 +627,18 @@ const rows = $('#rows'), pv = $('#preview'), pvLabel = $('#pvLabel');
 let pvIdx = -1;
 function showPreview(i) {
   if (i === pvIdx) return; pvIdx = i;
-  const holder = document.createElement('div'); holder.innerHTML = media(all[i], 'in'); const el = holder.firstElementChild;
+  const holder = document.createElement('div'); holder.innerHTML = media(rest[i], 'in'); const el = holder.firstElementChild;
   pv.appendChild(el); if (el.tagName === 'VIDEO' && !reduce) { el.muted = true; el.play().catch(() => {}); }
   setTimeout(() => { [...pv.querySelectorAll('img, video')].filter(o => o !== el && o !== pv.lastElementChild).forEach(o => o.remove()); }, 800);
-  pvLabel.textContent = `${all[i].type} · ${all[i].date}`;
+  pvLabel.textContent = `${rest[i].type} · ${rest[i].date}`;
   rows.querySelectorAll('button').forEach((b, k) => b.classList.toggle('on', k === i));
 }
-rows.innerHTML = all.map((w, i) => `<li><button data-i="${i}"><span class="small n">${String(i + 1).padStart(2, '0')}</span><span class="t">${esc(w.title)}</span><span class="small">${w.type === 'Video' ? '▶ ' : w.slides ? `${w.slides.length} images · ` : ''}${w.date.replace(/, \d{4}/, '')}</span></button></li>`).join('');
+rows.innerHTML = rest.map((w, i) => `<li><button data-i="${i}"><span class="small n">${String(i + 1).padStart(2, '0')}</span><span class="t">${esc(w.title)}</span><span class="small">${w.type === 'Video' ? '▶ ' : w.slides ? `${w.slides.length} images · ` : ''}${w.date.replace(/, \d{4}/, '')}</span></button></li>`).join('');
 rows.querySelectorAll('button').forEach(b => {
   const i = +b.dataset.i;
   b.addEventListener('mouseenter', () => showPreview(i));
   b.addEventListener('focus', () => showPreview(i));
-  b.addEventListener('click', () => openViewer(all.indexOf(all[i]), true));
+  b.addEventListener('click', () => openViewer(i, true));
 });
 showPreview(0);
 
@@ -651,7 +669,7 @@ function showSlide(i) {
   $('#vCount').textContent = `${slideI + 1} / ${imgs.length}`;
 }
 function openViewer(i, fromIndex = false) {
-  vList = fromIndex ? all : works; vI = i;
+  vList = fromIndex ? rest : works; vI = i;
   cards.forEach(el => { const v = el.querySelector('video'); if (v) v.pause(); });
   if (!viewer.open) viewer.showModal(); fillViewer();
 }
