@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Timeless: AI creative making cinematic characters and concepts.">
+<title>Timeless AI Art</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Manrope:wght@400;500&display=swap">
+<style>
+/* Layout: one room, one deck of frames under a red sun. Everything else stays out of the way. */
+:root {
+  --bg: #0C0C0D;
+  --fg: #E8E3D9;
+  --dim: #7D7973;
+  --line: #242426;
+  --red: #D7141A;
+  --display: "Italiana", "Didot", Georgia, serif;
+  --body: "Manrope", system-ui, sans-serif;
+  --ease: cubic-bezier(.22,.8,.2,1);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); }
+body { color: var(--fg); font: 400 .95rem/1.6 var(--body); padding-inline: clamp(16px, 4vw, 48px); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+:focus-visible { outline: 1px solid var(--red); outline-offset: 4px; }
+.small { font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }
+
+.grain { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; opacity: .07; mix-blend-mode: overlay; }
+
+header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-block: 1.4rem; }
+.word { font: 400 1.5rem/1 var(--display); letter-spacing: .28em; text-decoration: none; }
+header nav { display: flex; gap: 1.6rem; }
+header nav a { text-decoration: none; transition: color .2s; }
+header nav a:hover { color: var(--red); }
+
+/* Stage */
+.stage { position: relative; display: grid; justify-items: center; gap: 2rem; padding-block: clamp(1.5rem, 5vh, 3.5rem) clamp(3rem, 8vh, 5rem); }
+.sun { position: absolute; top: 4%; left: 50%; width: min(520px, 92vw); aspect-ratio: 1; margin-left: calc(min(520px, 92vw) / -2); border-radius: 50%;
+  background: radial-gradient(circle at 45% 40%, #E8262B, var(--red) 50%, #7E0A0E); opacity: .9;
+  transform: translate(var(--px, 0px), var(--py, 0px)); transition: transform 1.2s var(--ease); pointer-events: none; }
+.deck-wrap { position: relative; perspective: 1200px; touch-action: pan-y; user-select: none; }
+.deck { position: relative; width: min(360px, 72vw); aspect-ratio: 3 / 4; max-width: 100%; transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .7s var(--ease); }
+.card { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .8s var(--ease), opacity .6s var(--ease), filter .8s var(--ease); cursor: grab; }
+.card .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1s var(--ease); }
+.card .slide.on { opacity: 1; }
+.card img, .card video { width: 100%; height: 100%; object-fit: cover; background: #121214; display: block; box-shadow: 0 40px 70px -30px #000; pointer-events: none; }
+.card .glare { position: absolute; inset: 0; background: radial-gradient(circle at var(--gx, 30%) var(--gy, 20%), rgba(255,245,235,.22), transparent 50%); mix-blend-mode: soft-light; opacity: 0; transition: opacity .4s; }
+.deck-wrap:hover .card[data-pos="0"] .glare { opacity: 1; }
+.card[data-pos="0"] { transform: translateZ(0); z-index: 4; }
+.card[data-pos="1"] { transform: translate3d(0, -22px, -70px) rotateZ(2deg); filter: brightness(.55); z-index: 3; }
+.card[data-pos="2"] { transform: translate3d(0, -40px, -140px) rotateZ(-2deg); filter: brightness(.3); z-index: 2; }
+.card[data-pos="out"] { transform: translate3d(-130%, 30px, 60px) rotateY(-50deg) rotateZ(-8deg); opacity: 0; z-index: 5; pointer-events: none; }
+.card[data-pos="hide"] { transform: translate3d(0, -50px, -200px); opacity: 0; z-index: 1; pointer-events: none; }
+.card.dragging { transition: none; }
+
+.caption { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1.5rem; width: min(560px, 100%); text-align: center; }
+.caption h1 { font: 400 clamp(1.6rem, 4vw, 2.5rem)/1.1 var(--display); letter-spacing: .05em; margin: 0 0 .5rem; min-height: 1.1em; text-wrap: balance; }
+.caption h1 .wd { white-space: nowrap; }
+.caption h1 .ch { display: inline-block; animation: rise .7s var(--ease) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(.4em); filter: blur(4px); } }
+.arrow { width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; display: grid; place-items: center; transition: border-color .2s, color .2s; }
+.arrow:hover { border-color: var(--red); color: var(--red); }
+.count { font-variant-numeric: tabular-nums; }
+
+/* Shared section frame */
+.sec { border-top: 1px solid var(--line); padding-block: clamp(3rem, 8vw, 5.5rem); }
+.sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; margin-bottom: clamp(1.5rem, 4vw, 2.5rem); }
+.sec-head h2 { font: 400 clamp(2rem, 5vw, 3.2rem)/1 var(--display); letter-spacing: .06em; margin: 0; }
+
+/* Index: list + preview window */
+.index { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: clamp(2rem, 5vw, 4rem); align-items: start; }
+.rows { list-style: none; margin: 0; padding: 0; }
+.rows button { width: 100%; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto; gap: 1rem; align-items: baseline; text-align: left; padding-block: 1.05rem; border-bottom: 1px solid var(--line); transition: padding .5s var(--ease), color .3s; }
+.rows li:first-child button { border-top: 1px solid var(--line); }
+.rows .t { font: 400 clamp(1.25rem, 2.6vw, 1.8rem)/1.15 var(--display); letter-spacing: .04em; min-width: 0; overflow-wrap: anywhere; }
+.rows button:hover, .rows button.on { padding-left: .8rem; }
+.rows button.on .t { color: var(--red); }
+.rows .n { font-variant-numeric: tabular-nums; }
+.preview { position: sticky; top: 2rem; aspect-ratio: 3 / 4; max-width: 100%; overflow: hidden; background: #121214; }
+.preview img, .preview video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.preview .in { animation: wipe .7s var(--ease) both; }
+@keyframes wipe { from { clip-path: inset(100% 0 0 0); transform: scale(1.08); } to { clip-path: inset(0 0 0 0); transform: scale(1); } }
+.preview .small { position: absolute; left: 12px; bottom: 12px; z-index: 2; color: var(--fg); }
+
+/* About: words light up as you scroll */
+.statement { margin: 0; font: 400 clamp(1.8rem, 4.4vw, 3.4rem)/1.2 var(--display); letter-spacing: .02em; max-width: 24ch; }
+.statement .w { opacity: .14; transition: opacity .3s, color .3s; }
+.statement .w.lit { opacity: 1; }
+.statement .w.red.lit { color: var(--red); }
+.stats { display: flex; flex-wrap: wrap; gap: 1.5rem clamp(2rem, 6vw, 5rem); margin-top: clamp(2rem, 5vw, 3rem); }
+.stats b { display: block; font: 400 clamp(2.4rem, 5vw, 3.4rem)/1 var(--display); font-weight: 400; color: var(--fg); font-variant-numeric: tabular-nums; }
+
+/* Contact */
+.contact { text-align: center; display: grid; justify-items: center; gap: 1.6rem; }
+.contact h2 { font: 400 clamp(2.6rem, 8vw, 6rem)/1 var(--display); letter-spacing: .04em; margin: 0; text-wrap: balance; }
+.magnet { display: inline-grid; place-items: center; width: 168px; height: 168px; border-radius: 50%; background: var(--red); color: var(--fg); text-decoration: none; text-align: center; line-height: 1.5; padding: 1rem; transition: transform .5s var(--ease); }
+.magnet span { transition: transform .5s var(--ease); display: block; color: var(--fg); }
+.links { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem 1.8rem; }
+.links a, .links label { text-decoration: none; cursor: pointer; transition: color .2s; }
+.links a:hover, .links label:hover { color: var(--red); }
+.play { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%) translateZ(1px); z-index: 6; pointer-events: none; padding: .45rem .8rem; background: rgba(12,12,13,.72); color: var(--fg); border-radius: 99px; opacity: 0; transition: opacity .3s; }
+.deck-wrap:hover .card[data-pos="0"] .play, .card[data-pos="0"]:focus-within .play { opacity: 1; }
+
+/* About links */
+.find { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 0 2rem; margin-top: clamp(2rem, 5vw, 3rem); border-top: 1px solid var(--line); }
+.find a { display: grid; gap: .2rem; padding-block: 1rem; border-bottom: 1px solid var(--line); text-decoration: none; transition: color .2s, padding .4s var(--ease); }
+.find a b { font: 400 1.5rem/1.1 var(--display); letter-spacing: .04em; font-weight: 400; }
+.find a:hover { color: var(--red); padding-left: .5rem; }
+
+/* Viewer */
+.v-slides { position: relative; width: 100%; height: 100%; display: grid; place-items: center; }
+.v-slides img { position: absolute; inset: 0; margin: auto; opacity: 0; transition: opacity .5s var(--ease); }
+.v-slides img.on { opacity: 1; }
+.v-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; background: rgba(12,12,13,.7); border: 1px solid var(--line); display: grid; place-items: center; z-index: 2; }
+.v-nav:hover { border-color: var(--red); color: var(--red); }
+.v-nav.l { left: 12px; } .v-nav.r { right: 12px; }
+.v-count { position: absolute; left: 12px; bottom: 12px; z-index: 2; padding: .35rem .6rem; background: rgba(12,12,13,.7); color: var(--fg); }
+.thumbs { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .4rem; }
+.thumbs button { width: 52px; aspect-ratio: 3 / 4; overflow: hidden; opacity: .45; outline-offset: 2px; transition: opacity .2s; }
+.thumbs button.on { opacity: 1; outline: 1px solid var(--red); }
+.thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+dialog.viewer { width: min(1100px, calc(100vw - 24px)); max-width: none; height: min(800px, calc(100dvh - 24px)); max-height: none; padding: 0; border: 1px solid var(--line); background: #0F0F10; color: var(--fg); overflow: hidden; }
+dialog.viewer::backdrop { background: rgba(0,0,0,.82); backdrop-filter: blur(6px); }
+.v-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); height: 100%; }
+.v-media { position: relative; background: #000; display: grid; place-items: center; min-height: 0; }
+.v-media video, .v-media img { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; }
+.v-side { display: grid; grid-template-rows: auto 1fr auto; gap: 1.25rem; padding: clamp(1.25rem, 3vw, 2rem); border-left: 1px solid var(--line); overflow-y: auto; min-width: 0; }
+.v-side h3 { font: 400 clamp(1.7rem, 3vw, 2.3rem)/1.15 var(--display); letter-spacing: .04em; margin: .5rem 0 0; overflow-wrap: anywhere; }
+.v-text p { margin: 0 0 .9rem; color: #BDB8AF; }
+.v-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+.v-btn { border: 1px solid var(--line); padding: .7rem 1rem; text-decoration: none; transition: border-color .2s, color .2s; }
+.v-btn:hover { border-color: var(--red); color: var(--red); }
+.v-close { position: absolute; top: 10px; right: 10px; z-index: 2; background: rgba(12,12,13,.7); }
+
+footer { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-top: 1px solid var(--line); padding-block: 1.25rem 2rem; }
+
+@media (max-width: 720px) {
+  .index { grid-template-columns: minmax(0, 1fr); }
+  .preview { display: none; }
+  .v-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .v-side { border-left: 0; border-top: 1px solid var(--line); max-height: 40dvh; }
+  header nav { gap: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+<canvas class="grain" id="grain" aria-hidden="true"></canvas>
+
+<header>
+  <a class="word" href="#">TIMELESS</a>
+  <nav class="small">
+    <a href="#index">Index</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+    <a href="https://www.instagram.com/timeless.aiart/" target="_blank" rel="noopener">Instagram ↗</a>
+    <a href="https://x.com/Timeless_aiart" target="_blank" rel="noopener">X ↗</a>
+  </nav>
+</header>
+
+<main>
+  <section class="stage" aria-label="Work">
+    <div class="sun" id="sun" aria-hidden="true"></div>
+    <div class="deck-wrap" id="deckWrap">
+      <div class="deck" id="deck"></div>
+    </div>
+    <div class="caption">
+      <button class="arrow" id="prev" aria-label="Previous work">←</button>
+      <div>
+        <h1 id="title" aria-live="polite"></h1>
+        <div class="small"><span class="count" id="count"></span> · <span id="meta"></span></div>
+      </div>
+      <button class="arrow" id="next" aria-label="Next work">→</button>
+    </div>
+  </section>
+
+  <section class="sec" id="index">
+    <div class="sec-head"><h2>Index</h2><span class="small">Hover to preview · select to watch</span></div>
+    <div class="index">
+      <ul class="rows" id="rows"></ul>
+      <div class="preview" id="preview" aria-hidden="true"><span class="small" id="pvLabel"></span></div>
+    </div>
+  </section>
+
+  <section class="sec" id="about">
+    <div class="sec-head"><h2>About</h2><span class="small">AI creative · Concepts</span></div>
+    <p class="statement" id="statement">Timeless is an AI creative making cinematic characters and concepts. Most pieces start as <span class="red">Midjourney</span> visuals, get animated with <span class="red">Seedance</span> inside <span class="red">Runway,</span> upscaled with <span class="red">Topaz</span> and finished in Premiere Pro.</p>
+    <div class="stats">
+      <div><b>56.5K</b><span class="small">Followers on Instagram</span></div>
+      <div><b>3</b><span class="small">Partners: Runway, Topaz Labs, Dreamina</span></div>
+      <div><b>2024</b><span class="small">On Linktree since August</span></div>
+    </div>
+    <div class="find">
+      <a href="https://www.instagram.com/timeless.aiart/" target="_blank" rel="noopener"><span class="small">Instagram</span><b>@timeless.aiart ↗</b></a>
+      <a href="https://x.com/Timeless_aiart" target="_blank" rel="noopener"><span class="small">X / Twitter</span><b>@Timeless_aiart ↗</b></a>
+      <a href="https://www.threads.com/@timeless_aiart" target="_blank" rel="noopener"><span class="small">Threads</span><b>@timeless_aiart ↗</b></a>
+      <a href="https://stock.adobe.com/ph/contributor/211462173/Timeless_art" target="_blank" rel="noopener"><span class="small">Adobe Stock</span><b>Timeless_art ↗</b></a>
+    </div>
+  </section>
+
+  <section class="sec contact" id="contact">
+    <span class="small">Commissions · Collaborations · Licensing</span>
+    <h2>Let&rsquo;s make something</h2>
+    <a class="magnet" id="magnet" href="https://www.instagram.com/timeless.aiart/" target="_blank" rel="noopener"><span class="small">Message on<br>Instagram ↗</span></a>
+    <div class="links small">
+      <a href="https://x.com/Timeless_aiart" target="_blank" rel="noopener">X ↗</a>
+      <a href="https://www.threads.com/@timeless_aiart" target="_blank" rel="noopener">Threads ↗</a>
+      <a href="https://linktr.ee/Timelessaiart" target="_blank" rel="noopener">Linktree ↗</a>
+    </div>
+  </section>
+</main>
+
+<dialog class="viewer" id="viewer" aria-label="Watch work">
+  <div class="v-grid">
+    <div class="v-media" id="vMedia"></div>
+    <div class="v-side">
+      <div>
+        <span class="small" id="vMeta"></span>
+        <h3 id="vTitle"></h3>
+      </div>
+      <div class="v-text" id="vText"></div>
+      <div class="v-actions">
+        <a class="v-btn small" id="vLink" href="#" target="_blank" rel="noopener">View on Instagram ↗</a>
+        <button class="v-btn small" id="vPrev" aria-label="Previous work">←</button>
+        <button class="v-btn small" id="vNext" aria-label="Next work">→</button>
+      </div>
+    </div>
+  </div>
+  <button class="v-btn small v-close" id="vClose">Close</button>
+</dialog>
+
+<footer class="small">
+  <span>All work by Timeless · titles and captions as posted on Instagram and X</span>
+  <span>© 2026 Timeless</span>
+</footer>
+
+<script>
+(() => {
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/* Static grain, redrawn on resize only */
+const g = $('#grain');
+function grain() { g.width = Math.max(64, Math.ceil(innerWidth / 2)); g.height = Math.max(64, Math.ceil(innerHeight / 2)); const x = g.getContext('2d'), d = x.createImageData(g.width, g.height);
+  for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+  x.putImageData(d, 0, 0); }
+grain(); addEventListener('resize', grain);
+
+/* Work from @timeless.aiart, titles and captions as posted */
+const all = [
+ {
+  "title": "A Waltz in Whitechapel.",
+  "date": "Aug 15, 2026",
+  "type": "Video",
+  "poster": "art/ig-11.jpg",
+  "video": "video/DcDgUY7vCm2.mp4",
+  "text": [
+   "Visuals from Midjourney and an almost 30 second choreography with Seedance 2.5.",
+   "A 19th-century Victorian London inspired setting for this particular piece."
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/reel/DcDgUY7vCm2/"
+ },
+ {
+  "title": "Meliodas",
+  "date": "Sep 2, 2026",
+  "type": "Video",
+  "poster": "art/ig-10.jpg",
+  "video": "video/Dcx8ysMPaKt.mp4",
+  "text": [
+   "Had to use multiple clips for this one, like maybe 3-4, 480P and 720P clips combined (using Seedance 2.5), with some post-editing with Premiere Pro.",
+   "All of those clips were generated inside of Runway (very thankful)."
+  ],
+  "audio": "Void Inside - Phelian",
+  "url": "https://www.instagram.com/reel/Dcx8ysMPaKt/"
+ },
+ {
+  "title": "\"Mihari\" (Lookout)",
+  "date": "Sep 16, 2026",
+  "type": "Video",
+  "poster": "art/ig-05.jpg",
+  "video": "video/DdXlgRbPSmE.mp4",
+  "text": [
+   "Made with Midjourney and Seedance 2.5 inside of Runway and upscaled with Topaz.",
+   "Post-edit with Premiere Pro."
+  ],
+  "audio": "Arigato - Nxnja",
+  "url": "https://www.instagram.com/reel/DdXlgRbPSmE/"
+ },
+ {
+  "title": "Equilibrium",
+  "date": "Sep 1, 2026",
+  "type": "Video",
+  "poster": "art/x2094704092870541493.jpg",
+  "video": "video/x2094704092870541493.mp4",
+  "text": [
+   "Visuals from Midjourney and choreography with Seedance 2.5."
+  ],
+  "audio": "",
+  "url": "https://x.com/Timeless_aiart/status/2094704092870541493"
+ },
+ {
+  "title": "saltatio aeterna",
+  "date": "Aug 11, 2026",
+  "type": "Video",
+  "poster": "art/x2087104545768018055.jpg",
+  "video": "video/x2087104545768018055.mp4",
+  "text": [
+   "Seedance 2.5 is seriously jaw-dropping."
+  ],
+  "audio": "",
+  "url": "https://x.com/Timeless_aiart/status/2087104545768018055"
+ },
+ {
+  "title": "\"visceral\" - Ivan of the Nevilles",
+  "date": "Aug 10, 2026",
+  "type": "Video",
+  "poster": "art/x2086647227276239053.jpg",
+  "video": "video/x2086647227276239053.mp4",
+  "text": [],
+  "audio": "",
+  "url": "https://x.com/Timeless_aiart/status/2086647227276239053"
+ },
+ {
+  "title": "Shadows",
+  "date": "Aug 18, 2026",
+  "type": "Video",
+  "poster": "art/x2089564894391943584.jpg",
+  "video": "video/x2089564894391943584.mp4",
+  "text": [],
+  "audio": "",
+  "url": "https://x.com/Timeless_aiart/status/2089564894391943584"
+ },
+ {
+  "title": "Oni V2.0",
+  "date": "Sep 15, 2026",
+  "type": "Carousel · 5 images",
+  "poster": "art/DdTSi2HlNPP-1.jpg",
+  "video": "",
+  "text": [
+   "It's been a while since I've done a Carousel post, so here goes some of my pieces from way back, those of which I consider \"old but gold\". I do kinda miss the gritty red theme I used to make.",
+   "Anyway, I hope you guys like them as much as I do! 👹"
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/p/DdTSi2HlNPP/",
+  "slides": [
+   "art/DdTSi2HlNPP-1.jpg",
+   "art/DdTSi2HlNPP-2.jpg",
+   "art/DdTSi2HlNPP-3.jpg",
+   "art/DdTSi2HlNPP-4.jpg",
+   "art/DdTSi2HlNPP-5.jpg"
+  ]
+ },
+ {
+  "title": "Archives Vol. 1",
+  "date": "Sep 30, 2026",
+  "type": "Carousel · 9 images",
+  "poster": "art/Dd7o3QrEyul-1.jpg",
+  "video": "",
+  "text": [
+   "Most recent pieces published through my X/Twitter page.",
+   "Visuals from Midjourney."
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/p/Dd7o3QrEyul/",
+  "slides": [
+   "art/Dd7o3QrEyul-1.jpg",
+   "art/Dd7o3QrEyul-2.jpg",
+   "art/Dd7o3QrEyul-3.jpg",
+   "art/Dd7o3QrEyul-4.jpg",
+   "art/Dd7o3QrEyul-5.jpg",
+   "art/Dd7o3QrEyul-6.jpg",
+   "art/Dd7o3QrEyul-7.jpg",
+   "art/Dd7o3QrEyul-8.jpg",
+   "art/Dd7o3QrEyul-9.jpg"
+  ]
+ },
+ {
+  "title": "Black Lotus",
+  "date": "Sep 21, 2026",
+  "type": "Video",
+  "poster": "art/ig-04.jpg",
+  "video": "video/DdjWF0MvFlY.mp4",
+  "text": [
+   "Visual from Midjourney, 15-second video generation done with Seedance 2.5."
+  ],
+  "audio": "ANTXRES ft. Cheyanne - Code Red",
+  "url": "https://www.instagram.com/reel/DdjWF0MvFlY/"
+ },
+ {
+  "title": "no soul left to save",
+  "date": "Apr 26, 2026",
+  "type": "Video",
+  "poster": "art/ig-12.jpg",
+  "video": "video/DXnfQ5Sj1FJ.mp4",
+  "text": [
+   "Been recreating some of my old pieces into animations/edits with the help of Seedance 2.0 inside of Runway.",
+   "It's a ton of fun!"
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/reel/DXnfQ5Sj1FJ/"
+ },
+ {
+  "title": "\"Every bullet leaves a signature.\" - Sinclair",
+  "date": "Sep 8, 2026",
+  "type": "Video",
+  "poster": "art/ig-09.jpg",
+  "video": "video/DdBXE2Cz5B8.mp4",
+  "text": [
+   "Another take on the \"materialization\" concept I did weeks ago. Just a short one with Midjourney and Seedance 2.5 with some post-editing."
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/reel/DdBXE2Cz5B8/"
+ },
+ {
+  "title": "Cruel Alekto",
+  "date": "Sep 14, 2026",
+  "type": "Video",
+  "poster": "art/ig-07.jpg",
+  "video": "video/DdS7_4GT6pc.mp4",
+  "text": [
+   "A 15-second short clip made with Midjourney and Seedance 2.5.",
+   "Watch the towel. 👀"
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/reel/DdS7_4GT6pc/"
+ },
+ {
+  "title": "School of the Dead",
+  "date": "Oct 1, 2026",
+  "type": "Video",
+  "poster": "art/ig-01.jpg",
+  "video": "video/Dd9C7kfPqfn.mp4",
+  "text": [
+   "Inspired by HOTD but a little bit more tame. 😂 Also wanted this to feel raw as much as possible.",
+   "Visual from Midjourney, video clip done with Seedance 2.5."
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/reel/Dd9C7kfPqfn/"
+ },
+ {
+  "title": "One of the drafts for my \"Equilibrium\" piece.",
+  "date": "Sep 25, 2026",
+  "type": "Video",
+  "poster": "art/ig-03.jpg",
+  "video": "video/DdttZhnywGN.mp4",
+  "text": [
+   "Just wanted to share! This was supposed to be IT but I had to push the model more and try out 30 seconds, hence this being a reference only instead."
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/reel/DdttZhnywGN/"
+ },
+ {
+  "title": "Where the little spirits gather.",
+  "date": "Sep 13, 2026",
+  "type": "Video",
+  "poster": "art/ig-08.jpg",
+  "video": "video/DdQVdxhP0LU.mp4",
+  "text": [
+   "Light and cozy concept, made with Midjourney and Seedance 2.5 inside of Runway."
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/reel/DdQVdxhP0LU/"
+ }
+];
+const works = all.slice(0, 9);
+
+/* Deck */
+const deck = $('#deck'), wrap = $('#deckWrap'), n = works.length;
+let cur = 0;
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const media = (w, cls = '') => w.video
+  ? `<video class="${cls}" src="${w.video}" poster="${w.poster}" muted loop playsinline preload="metadata" aria-label="${esc(w.title)}"></video>`
+  : `<img class="${cls}" src="${w.poster}" alt="${esc(w.title)}">`;
+const cardMedia = w => w.slides
+  ? w.slides.map((src, i) => `<img class="slide${i ? '' : ' on'}" src="${src}" alt="${esc(w.title)}, image ${i + 1} of ${w.slides.length}" loading="${i ? 'lazy' : 'eager'}">`).join('')
+  : media(w);
+const cards = works.map(w => { const el = document.createElement('div'); el.className = 'card'; el.innerHTML = `${cardMedia(w)}<span class="glare"></span><span class="play small">${w.video ? '▶ Watch' : `View all ${w.slides ? w.slides.length : ''} images`}</span>`; deck.appendChild(el); return el; });
+const playFront = () => cards.forEach((el, i) => { const v = el.querySelector('video'); if (!v) return; if (i === cur && !reduce && !document.getElementById('viewer').open) { v.muted = true; v.play().catch(() => {}); } else v.pause(); });
+function render() {
+  cards.forEach((el, i) => { const o = (i - cur + n) % n; el.dataset.pos = o === 0 ? '0' : o === 1 ? '1' : o === 2 ? '2' : o === n - 1 ? 'out' : 'hide'; });
+  const w = works[cur], t = $('#title');
+  let k = 0; t.innerHTML = w.title.split(' ').map(word => `<span class="wd">${[...word].map(c => `<span class="ch" aria-hidden="true" style="animation-delay:${Math.min(k++, 40) * 22}ms">${esc(c)}</span>`).join('')}</span>`).join(' ');
+  t.setAttribute('aria-label', w.title);
+  $('#count').textContent = `${String(cur + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}`;
+  $('#meta').textContent = `${w.type} · ${w.date}`;
+  playFront();
+}
+cards.forEach(el => { const v = el.querySelector('video'); if (v) v.addEventListener('canplay', playFront); });
+/* Carousel cards flick through their images while in front */
+if (!reduce) setInterval(() => {
+  const el = cards[cur], sl = el && el.querySelectorAll('.slide'); if (!sl || sl.length < 2 || document.getElementById('viewer').open) return;
+  const i = [...sl].findIndex(x => x.classList.contains('on')); sl[i].classList.remove('on'); sl[(i + 1) % sl.length].classList.add('on');
+}, 2400);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) playFront(); });
+const go = d => { cur = (cur + d + n) % n; render(); };
+$('#next').addEventListener('click', () => go(1));
+$('#prev').addEventListener('click', () => go(-1));
+addEventListener('keydown', e => { if (viewer.open) { const car = vMedia.querySelector('.v-slides'); if (e.key === 'ArrowRight') car ? showSlide(slideI + 1) : $('#vNext').click(); if (e.key === 'ArrowLeft') car ? showSlide(slideI - 1) : $('#vPrev').click(); return; } if (e.key === 'ArrowRight') go(1); if (e.key === 'ArrowLeft') go(-1); });
+render();
+
+/* Tilt the whole deck toward the cursor; the sun drifts the other way */
+const sun = $('#sun');
+addEventListener('pointermove', e => {
+  if (reduce || e.pointerType !== 'mouse') return;
+  const x = e.clientX / innerWidth - .5, y = e.clientY / innerHeight - .5;
+  sun.style.setProperty('--px', `${-x * 40}px`); sun.style.setProperty('--py', `${-y * 30}px`);
+  const b = wrap.getBoundingClientRect(), lx = (e.clientX - b.left) / b.width, ly = (e.clientY - b.top) / b.height;
+  deck.style.setProperty('--ry', `${clamp(lx - .5, -1, 1) * 22}deg`); deck.style.setProperty('--rx', `${clamp(.5 - ly, -1, 1) * 16}deg`);
+  cards[cur] && cards[cur].style.setProperty('--gx', `${lx * 100}%`); cards[cur] && cards[cur].style.setProperty('--gy', `${ly * 100}%`);
+}, { passive: true });
+
+/* Drag or swipe the front card away; a plain click opens it */
+let sx = null, dx = 0;
+wrap.addEventListener('pointerdown', e => { sx = e.clientX; dx = 0; cards[cur].classList.add('dragging'); wrap.setPointerCapture(e.pointerId); });
+wrap.addEventListener('pointermove', e => { if (sx === null) return; dx = e.clientX - sx; cards[cur].style.transform = `translateX(${dx}px) rotateY(${dx * .08}deg) rotateZ(${dx * .02}deg)`; });
+const end = () => { if (sx === null) return; const el = cards[cur]; el.classList.remove('dragging'); el.style.transform = ''; sx = null;
+  if (Math.abs(dx) > 70) go(dx < 0 ? 1 : -1); else if (Math.abs(dx) < 6) openViewer(cur); };
+wrap.addEventListener('pointerup', end); wrap.addEventListener('pointercancel', end);
+
+/* Index list with wipe preview */
+const rows = $('#rows'), pv = $('#preview'), pvLabel = $('#pvLabel');
+let pvIdx = -1;
+function showPreview(i) {
+  if (i === pvIdx) return; pvIdx = i;
+  const holder = document.createElement('div'); holder.innerHTML = media(all[i], 'in'); const el = holder.firstElementChild;
+  pv.appendChild(el); if (el.tagName === 'VIDEO' && !reduce) { el.muted = true; el.play().catch(() => {}); }
+  setTimeout(() => { [...pv.querySelectorAll('img, video')].filter(o => o !== el && o !== pv.lastElementChild).forEach(o => o.remove()); }, 800);
+  pvLabel.textContent = `${all[i].type} · ${all[i].date}`;
+  rows.querySelectorAll('button').forEach((b, k) => b.classList.toggle('on', k === i));
+}
+rows.innerHTML = all.map((w, i) => `<li><button data-i="${i}"><span class="small n">${String(i + 1).padStart(2, '0')}</span><span class="t">${esc(w.title)}</span><span class="small">${w.type === 'Video' ? '▶ ' : w.slides ? `${w.slides.length} images · ` : ''}${w.date.replace(/, \d{4}/, '')}</span></button></li>`).join('');
+rows.querySelectorAll('button').forEach(b => {
+  const i = +b.dataset.i;
+  b.addEventListener('mouseenter', () => showPreview(i));
+  b.addEventListener('focus', () => showPreview(i));
+  b.addEventListener('click', () => openViewer(all.indexOf(all[i]), true));
+});
+showPreview(0);
+
+/* Viewer: plays the real clip with sound */
+const viewer = $('#viewer'), vMedia = $('#vMedia');
+let vList = works, vI = 0;
+function fillViewer() {
+  const w = vList[vI];
+  vMedia.innerHTML = w.video ? `<video src="${w.video}" poster="${w.poster}" controls autoplay playsinline loop></video>`
+    : w.slides ? `<div class="v-slides">${w.slides.map((src, i) => `<img src="${src}" class="${i ? '' : 'on'}" alt="${esc(w.title)}, image ${i + 1} of ${w.slides.length}">`).join('')}</div>
+      <button class="v-nav l" data-d="-1" aria-label="Previous image">←</button><button class="v-nav r" data-d="1" aria-label="Next image">→</button><span class="v-count small" id="vCount">1 / ${w.slides.length}</span>`
+    : `<img src="${w.poster}" alt="${esc(w.title)}">`;
+  slideI = 0;
+  $('#vMeta').textContent = `${w.type} · ${w.date}`;
+  $('#vTitle').textContent = w.title;
+  $('#vText').innerHTML = w.text.map(p => `<p>${esc(p)}</p>`).join('') + (w.audio ? `<p class="small">Audio: ${esc(w.audio)}</p>` : '') + (w.slides ? `<div class="thumbs">${w.slides.map((src, i) => `<button data-s="${i}" class="${i ? '' : 'on'}" aria-label="Show image ${i + 1}"><img src="${src}" alt=""></button>`).join('')}</div>` : '');
+  vMedia.querySelectorAll('.v-nav').forEach(b => b.addEventListener('click', () => showSlide(slideI + +b.dataset.d)));
+  $('#vText').querySelectorAll('.thumbs button').forEach(b => b.addEventListener('click', () => showSlide(+b.dataset.s)));
+  $('#vLink').href = w.url; $('#vLink').textContent = w.url.includes('x.com') ? 'View on X ↗' : 'View on Instagram ↗';
+  const v = vMedia.querySelector('video'); if (v) v.play().catch(() => { v.muted = true; v.play().catch(() => {}); });
+}
+let slideI = 0;
+function showSlide(i) {
+  const imgs = vMedia.querySelectorAll('.v-slides img'); if (!imgs.length) return;
+  slideI = (i + imgs.length) % imgs.length;
+  imgs.forEach((im, k) => im.classList.toggle('on', k === slideI));
+  document.querySelectorAll('.thumbs button').forEach((b, k) => b.classList.toggle('on', k === slideI));
+  $('#vCount').textContent = `${slideI + 1} / ${imgs.length}`;
+}
+function openViewer(i, fromIndex = false) {
+  vList = fromIndex ? all : works; vI = i;
+  cards.forEach(el => { const v = el.querySelector('video'); if (v) v.pause(); });
+  if (!viewer.open) viewer.showModal(); fillViewer();
+}
+viewer.addEventListener('close', () => { vMedia.innerHTML = ''; playFront(); });
+$('#vClose').addEventListener('click', () => viewer.close());
+$('#vNext').addEventListener('click', () => { vI = (vI + 1) % vList.length; fillViewer(); });
+$('#vPrev').addEventListener('click', () => { vI = (vI - 1 + vList.length) % vList.length; fillViewer(); });
+viewer.addEventListener('click', e => { if (e.target === viewer) viewer.close(); });
+
+/* About: words light up as the paragraph scrolls through the viewport */
+const st = $('#statement');
+const ws = [];
+[...st.childNodes].forEach(node => {
+  const red = node.nodeType === 1;
+  node.textContent.split(/(\s+)/).forEach(part => {
+    if (!part) return;
+    if (/^\s+$/.test(part)) { st.insertBefore(document.createTextNode(' '), node); return; }
+    const sp = document.createElement('span'); sp.className = 'w' + (red ? ' red' : ''); sp.textContent = part; st.insertBefore(sp, node); ws.push(sp);
+  });
+  node.remove();
+});
+function lightWords() {
+  const r = st.getBoundingClientRect(), p = reduce ? 1 : clamp((innerHeight * .85 - r.top) / (r.height + innerHeight * .3), 0, 1);
+  const k = Math.round(p * ws.length); ws.forEach((w, i) => w.classList.toggle('lit', i < k));
+}
+addEventListener('scroll', lightWords, { passive: true }); lightWords();
+
+/* Contact: the button leans toward the cursor */
+const mag = $('#magnet');
+mag.addEventListener('pointermove', e => {
+  if (reduce) return; const b = mag.getBoundingClientRect(), x = e.clientX - b.left - b.width / 2, y = e.clientY - b.top - b.height / 2;
+  mag.style.transform = `translate(${x * .35}px, ${y * .35}px)`; mag.firstElementChild.style.transform = `translate(${x * .15}px, ${y * .15}px)`;
+});
+mag.addEventListener('pointerleave', () => { mag.style.transform = ''; mag.firstElementChild.style.transform = ''; });
+
+})();
+</script>
+</body>
+</html>
