@@ -153,6 +153,7 @@ dialog.theatre[open] { animation: thIn .7s var(--ease); }
 .th-stats { position: absolute; right: 18px; bottom: 18px; z-index: 2; display: flex; gap: .65rem; padding: .38rem .65rem; border-radius: 99px; background: rgba(7,7,8,.55); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
   font: 500 .6rem/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: rgba(232,227,217,.72); font-variant-numeric: tabular-nums; pointer-events: none; animation: statIn .8s 1s var(--ease) both; }
 .th-stats:empty { display: none; }
+.v-stats { top: 14px; left: 14px; right: auto; bottom: auto; }
 @keyframes statIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .th-bar { position: absolute; left: 10px; right: 10px; bottom: -26px; height: 1px; background: var(--line); }
 .th-bar i { position: absolute; inset: 0; background: var(--red); transform-origin: 0 50%; transform: scaleX(0); }
@@ -427,9 +428,12 @@ const all = [
   "type": "Video",
   "poster": "art/x2089564894391943584.jpg",
   "video": "video/x2089564894391943584.mp4",
-  "text": [],
-  "audio": "",
-  "url": "https://x.com/Timeless_aiart/status/2089564894391943584"
+  "text": [
+   "Back for a bit on this style, but this time using Seedance 2.5 inside of Runway, visual from Midjourney and a bit of post-edit with Premiere Pro."
+  ],
+  "audio": "miss rany - Cherry On The Edge",
+  "url": "https://x.com/Timeless_aiart/status/2089564894391943584",
+  "audioLabel": "Music"
  },
  {
   "title": "Oni V2.0",
@@ -723,6 +727,27 @@ rows.querySelectorAll('button').forEach(b => {
 showPreview(0);
 
 /* Viewer: plays the real clip with sound */
+/* Engagement as of Oct 8, 2026 (Instagram hides view counts from logged-out visitors) */
+const stats = {
+  'https://www.instagram.com/reel/DcDgUY7vCm2/': [[50382, "likes"], [492, "comments"]],
+  'https://www.instagram.com/reel/Dcx8ysMPaKt/': [[146349, "likes"], [877, "comments"]],
+  'https://www.instagram.com/reel/DdXlgRbPSmE/': [[15351, "likes"], [50, "comments"]],
+  'https://x.com/Timeless_aiart/status/2094704092870541493': [[53591, "views"], [252, "reposts"], [1971, "likes"]],
+  'https://x.com/Timeless_aiart/status/2087104545768018055': [[60267, "views"], [185, "reposts"], [2113, "likes"]],
+  'https://x.com/Timeless_aiart/status/2086647227276239053': [[12447, "views"], [18, "reposts"], [241, "likes"]],
+  'https://x.com/Timeless_aiart/status/2089564894391943584': [[24020, "views"], [91, "reposts"], [752, "likes"]],
+  'https://www.instagram.com/p/DdTSi2HlNPP/': [[778, "likes"], [12, "comments"]],
+  'https://www.instagram.com/p/Dd7o3QrEyul/': [[731, "likes"], [8, "comments"]],
+  'https://www.instagram.com/reel/DdjWF0MvFlY/': [[511, "likes"], [20, "comments"]],
+  'https://www.instagram.com/reel/DXnfQ5Sj1FJ/': [[26196, "likes"], [205, "comments"]],
+  'https://www.instagram.com/reel/DdBXE2Cz5B8/': [[939, "likes"], [26, "comments"]],
+  'https://www.instagram.com/reel/DdS7_4GT6pc/': [[3203, "likes"], [37, "comments"]],
+  'https://www.instagram.com/reel/Dd9C7kfPqfn/': [[744, "likes"], [17, "comments"]],
+  'https://www.instagram.com/reel/DdttZhnywGN/': [[1739, "likes"], [38, "comments"]],
+  'https://www.instagram.com/reel/DdQVdxhP0LU/': [[360, "likes"], [17, "comments"]]
+};
+const fmt = v => v >= 1e6 ? (v / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : v >= 1e5 ? Math.round(v / 1e3) + 'K' : v >= 1e3 ? (v / 1e3).toFixed(1).replace(/\.0$/, '') + 'K' : String(v);
+const statLine = w => (stats[w.url] || []).map(([v, l]) => `<span>${fmt(v)} ${l}</span>`).join('<span aria-hidden="true">·</span>');
 const viewer = $('#viewer'), vMedia = $('#vMedia');
 let vList = works, vI = 0;
 function fillViewer() {
@@ -731,10 +756,11 @@ function fillViewer() {
     : w.slides ? `<div class="v-slides">${w.slides.map((src, i) => `<img src="${src}" class="${i ? '' : 'on'}" alt="${esc(w.title)}, image ${i + 1} of ${w.slides.length}">`).join('')}</div>
       <button class="v-nav l" data-d="-1" aria-label="Previous image">←</button><button class="v-nav r" data-d="1" aria-label="Next image">→</button><span class="v-count small" id="vCount">1 / ${w.slides.length}</span>`
     : `<img src="${w.poster}" alt="${esc(w.title)}">`;
+  if (stats[w.url]) vMedia.insertAdjacentHTML('beforeend', `<span class="th-stats v-stats">${statLine(w)}</span>`);
   slideI = 0;
   $('#vMeta').textContent = `${w.type} · ${w.date}`;
   $('#vTitle').textContent = w.title;
-  $('#vText').innerHTML = w.text.map(p => `<p>${esc(p)}</p>`).join('') + (w.audio ? `<p class="small">Audio: ${esc(w.audio)}</p>` : '') + (w.slides ? `<div class="thumbs">${w.slides.map((src, i) => `<button data-s="${i}" class="${i ? '' : 'on'}" aria-label="Show image ${i + 1}"><img src="${src}" alt=""></button>`).join('')}</div>` : '');
+  $('#vText').innerHTML = w.text.map(p => `<p>${esc(p)}</p>`).join('') + (w.audio ? `<p class="small">${w.audioLabel || 'Audio'}: ${esc(w.audio)}</p>` : '') + (w.slides ? `<div class="thumbs">${w.slides.map((src, i) => `<button data-s="${i}" class="${i ? '' : 'on'}" aria-label="Show image ${i + 1}"><img src="${src}" alt=""></button>`).join('')}</div>` : '');
   vMedia.querySelectorAll('.v-nav').forEach(b => b.addEventListener('click', () => showSlide(slideI + +b.dataset.d)));
   $('#vText').querySelectorAll('.thumbs button').forEach(b => b.addEventListener('click', () => showSlide(+b.dataset.s)));
   $('#vLink').href = w.url; $('#vLink').textContent = w.url.includes('x.com') ? 'View on X ↗' : 'View on Instagram ↗';
@@ -780,15 +806,6 @@ addEventListener('scroll', lightWords, { passive: true }); lightWords();
 /* Theatre: the featured pieces get their own full-screen stage */
 const theatre = $('#theatre'), thMedia = () => $('#thMedia');
 let thI = 0;
-/* Engagement as of Oct 8, 2026 (Instagram hides view counts from logged-out visitors) */
-const stats = {
-  'video/DcDgUY7vCm2.mp4': [[50382, 'likes'], [492, 'comments']],
-  'video/Dcx8ysMPaKt.mp4': [[146349, 'likes'], [877, 'comments']],
-  'video/DdXlgRbPSmE.mp4': [[15351, 'likes'], [50, 'comments']],
-  'video/x2094704092870541493.mp4': [[53591, 'views'], [252, 'reposts'], [1971, 'likes']],
-  'video/x2087104545768018055.mp4': [[60267, 'views'], [185, 'reposts'], [2113, 'likes']]
-};
-const fmt = v => v >= 1e6 ? (v / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : v >= 1e5 ? Math.round(v / 1e3) + 'K' : v >= 1e3 ? (v / 1e3).toFixed(1).replace(/\.0$/, '') + 'K' : String(v);
 function fillTheatre() {
   const w = works[thI], prev = works[(thI - 1 + n) % n], next = works[(thI + 1) % n];
   $('#thNum').innerHTML = `${String(thI + 1).padStart(2, '0')}<small>of ${String(n).padStart(2, '0')}</small>`;
@@ -800,12 +817,12 @@ function fillTheatre() {
   $('#thTitle').setAttribute('aria-label', w.title);
   $('#thMeta').textContent = `${w.type} · ${w.date}`;
   const t = $('#thText'); t.style.animation = 'none'; t.offsetHeight; t.style.animation = '';
-  t.innerHTML = w.text.map(q => `<p>${esc(q)}</p>`).join('') + (w.audio ? `<p class="small">Audio: ${esc(w.audio)}</p>` : '');
+  t.innerHTML = w.text.map(q => `<p>${esc(q)}</p>`).join('') + (w.audio ? `<p class="small">${w.audioLabel || 'Audio'}: ${esc(w.audio)}</p>` : '');
   $('#thLink').href = w.url; $('#thLink').textContent = w.url.includes('x.com') ? 'View on X ↗' : 'View on Instagram ↗';
   $('#thPrevT').textContent = prev.title; $('#thNextT').textContent = next.title;
   $('#thBar').style.transform = 'scaleX(0)';
-  const st = stats[w.video], sEl = $('#thStats'); sEl.style.animation = 'none'; sEl.offsetHeight; sEl.style.animation = '';
-  sEl.innerHTML = st ? st.map(([v, l]) => `<span>${fmt(v)} ${l}</span>`).join('<span aria-hidden="true">·</span>') : '';
+  const st = stats[w.url], sEl = $('#thStats'); sEl.style.animation = 'none'; sEl.offsetHeight; sEl.style.animation = '';
+  sEl.innerHTML = st ? statLine(w) : '';
   const v = fresh.querySelector('video'), snd = $('#thSound');
   snd.hidden = !v;
   if (v) {
