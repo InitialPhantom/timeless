@@ -51,12 +51,12 @@ header nav a:hover { color: var(--red); }
 .bar { flex: 1; height: 1px; background: var(--line); position: relative; overflow: hidden; }
 .bar i { position: absolute; inset: 0; background: var(--red); transform-origin: 0 50%; transform: scaleX(0); }
 .count { font-variant-numeric: tabular-nums; min-width: 4.5em; }
-.track { position: relative; z-index: 1; display: flex; align-items: center; gap: clamp(1.5rem, 4vw, 3.5rem); padding-inline: max(clamp(16px, 4vw, 48px), calc(50vw - min(58vh, 600px) * .375)); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-block: 2.5rem; cursor: grab; user-select: none; }
+.track { position: relative; z-index: 1; display: flex; align-items: center; gap: clamp(1.5rem, 4vw, 3.5rem); padding-inline: max(clamp(16px, 4vw, 48px), calc(50vw - min(58vh, 600px) * .375)); padding-block: 2.5rem; cursor: grab; user-select: none; touch-action: pan-y; will-change: transform; }
 .track::-webkit-scrollbar { display: none; }
-.track.dragging { cursor: grabbing; scroll-snap-type: none; }
+.track.dragging { cursor: grabbing; }
 .wnav { width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 50%; display: grid; place-items: center; color: var(--fg); transition: border-color .2s, color .2s; }
 .wnav:hover { border-color: var(--red); color: var(--red); }
-.piece { flex: none; scroll-snap-align: center; width: calc(min(58vh, 600px) * .75); display: grid; gap: .9rem; transform: scale(.88); opacity: .4; transition: transform .7s var(--ease), opacity .7s var(--ease); outline: none; }
+.piece { flex: none; width: calc(min(58vh, 600px) * .75); display: grid; gap: .9rem; transform: scale(.88); opacity: .4; transition: transform .7s var(--ease), opacity .7s var(--ease); outline: none; }
 .piece.on { transform: none; opacity: 1; }
 .piece { position: relative; }
 .piece::before { content: ""; position: absolute; inset: -3% -16% 14% -16%; z-index: -1; pointer-events: none; border-radius: 50%;
@@ -588,20 +588,21 @@ const cards = works.map((w, i) => {
   el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTheatre(i); } });
   track.appendChild(el); return el;
 });
-let cur = -1, maxX = 0, flat = false, x = 0;
+let cur = -1, x = 0;
 const playFront = () => cards.forEach((el, i) => { const v = el.querySelector('video'); if (!v) return; if (i === cur && !reduce && !document.getElementById('viewer').open && !document.getElementById('theatre').open) { v.muted = true; v.play().catch(() => {}); } else v.pause(); });
 cards.forEach(el => { const v = el.querySelector('video'); if (v) v.addEventListener('canplay', () => { if (+el.dataset.i === cur) playFront(); }); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) playFront(); });
-function layout() {
-  flat = true;
-  if (flat) { sec.style.height = ''; track.style.transform = ''; return; }
-  maxX = Math.max(0, track.scrollWidth - innerWidth);
-  sec.style.height = `${innerHeight + maxX}px`;
-}
+/* The row glides on a spring: it follows a drag 1:1, carries momentum on release,
+   then eases onto the nearest piece. Speed adds a horizontal motion blur. */
+let pos = 0, target = 0, vel = 0, lastPos = 0, centers = [], dragging = false;
+document.body.insertAdjacentHTML('beforeend', '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="mblur" x="-15%" y="0" width="130%" height="100%"><feGaussianBlur id="mblurStd" stdDeviation="0 0"/></filter></svg>');
+const blurStd = document.getElementById('mblurStd');
+function measure() { centers = cards.map(el => el.offsetLeft + el.offsetWidth / 2 - track.clientWidth / 2); }
+const lo = () => centers[0], hi = () => centers[n - 1];
+const nearest = v => centers.reduce((bi, c, i) => Math.abs(c - v) < Math.abs(centers[bi] - v) ? i : bi, 0);
+function layout() { const i = cur < 0 ? Math.floor(n / 2) : cur; measure(); pos = target = centers[i]; vel = 0; }
 layout(); addEventListener('resize', layout);
-function centerOn(i) { const el = cards[i]; track.scrollLeft = Math.max(0, el.offsetLeft + el.offsetWidth / 2 - track.clientWidth / 2); }
-centerOn(Math.floor(n / 2));
-addEventListener('load', () => { if (track.scrollLeft < 2) centerOn(Math.floor(n / 2)); });
+addEventListener('load', () => { measure(); if (!dragging) { pos = target = centers[cur < 0 ? Math.floor(n / 2) : cur]; } });
 function setActive(i) {
   if (i === cur) return; cur = i;
   cards.forEach((el, k) => el.classList.toggle('on', k === i));
@@ -609,16 +610,20 @@ function setActive(i) {
   $('#meta').textContent = works[i].title;
   playFront();
 }
+let blurOn = false;
 function frameTick() {
   const mid = innerWidth / 2;
-  if (!flat) {
-    const r = sec.getBoundingClientRect(), p = clamp(-r.top / Math.max(1, sec.offsetHeight - innerHeight), 0, 1);
-    x += (p * maxX - x) * .14; if (Math.abs(p * maxX - x) < .1) x = p * maxX;
-    track.style.transform = `translate3d(${-x}px, 0, 0)`;
-    bar.style.transform = `scaleX(${p})`;
-  } else {
-    x = track.scrollLeft; bar.style.transform = `scaleX(${track.scrollLeft / Math.max(1, track.scrollWidth - track.clientWidth)})`;
+  if (!dragging) {
+    if (reduce) pos = target;
+    else { vel += (target - pos) * .065; vel *= .72; pos += vel; if (Math.abs(target - pos) < .05 && Math.abs(vel) < .05) { pos = target; vel = 0; } }
   }
+  const dv = pos - lastPos; lastPos = pos; x = pos;
+  const skew = reduce ? 0 : clamp(-dv * .035, -1.8, 1.8);
+  track.style.transform = `translate3d(${-pos}px, 0, 0) skewX(${skew.toFixed(2)}deg)`;
+  const blur = reduce ? 0 : Math.min(Math.abs(dv) * .28, 5.5);
+  if (blur > .35) { blurStd.setAttribute('stdDeviation', `${blur.toFixed(1)} 0`); if (!blurOn) { track.style.filter = 'url(#mblur)'; blurOn = true; } }
+  else if (blurOn) { track.style.filter = ''; blurOn = false; }
+  bar.style.transform = `scaleX(${clamp((pos - lo()) / Math.max(1, hi() - lo()), 0, 1)})`;
   let best = 0, bd = Infinity;
   cards.forEach((el, i) => {
     const b = el.getBoundingClientRect(), c = b.left + b.width / 2, d = c - mid;
@@ -630,31 +635,46 @@ function frameTick() {
   requestAnimationFrame(frameTick);
 }
 
-/* Hold and drag the track sideways; a plain click opens the piece */
-let sx = null, sy0 = 0, sl0 = 0, moved = 0, downOn = null;
+/* Hold and drag the row (mouse, pen or finger); a plain click opens the piece */
+let sx = null, sy = 0, p0 = 0, moved = 0, downOn = null, axis = null, samples = [];
+const rubber = v => v < lo() ? lo() - (lo() - v) * .35 : v > hi() ? hi() + (v - hi()) * .35 : v;
 track.addEventListener('pointerdown', e => {
-  if (e.pointerType !== 'mouse' && flat) return;
-  sx = e.clientX; sy0 = scrollY; sl0 = track.scrollLeft; moved = 0; downOn = e.target.closest('.piece');
+  if (e.button > 0) return;
+  sx = e.clientX; sy = e.clientY; p0 = pos; moved = 0; axis = null; downOn = e.target.closest('.piece'); samples = [[e.clientX, performance.now()]];
 });
 addEventListener('pointermove', e => {
-  if (sx === null) return; const dx = e.clientX - sx; moved = Math.max(moved, Math.abs(dx));
-  if (moved > 4) track.classList.add('dragging');
-  track.scrollLeft = sl0 - dx;
+  if (sx === null) return;
+  const dx = e.clientX - sx, dy = e.clientY - sy;
+  if (!axis && Math.hypot(dx, dy) > 6) axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+  if (axis !== 'x') return;
+  moved = Math.max(moved, Math.abs(dx));
+  if (!dragging) { dragging = true; track.classList.add('dragging'); vel = 0; }
+  pos = target = rubber(p0 - dx);
+  samples.push([e.clientX, performance.now()]); if (samples.length > 6) samples.shift();
 });
-addEventListener('pointercancel', () => { sx = null; track.classList.remove('dragging'); });
-addEventListener('pointerup', () => {
-  if (sx === null) return; sx = null; track.classList.remove('dragging'); if (moved >= 6) goTo(cur);
-  if (moved < 6 && downOn) openTheatre(+downOn.dataset.i);
-});
+function release() {
+  if (sx === null) return; sx = null;
+  if (dragging) {
+    dragging = false; track.classList.remove('dragging');
+    const [a, b] = [samples[0], samples[samples.length - 1]], dt = Math.max(16, b[1] - a[1]);
+    const flick = -(b[0] - a[0]) / dt;                       // px per ms, in row direction
+    const here = nearest(pos), i = clamp(nearest(pos + flick * 220), here - 1, here + 1);   // momentum carries at most one piece further
+    goI = i; goT = performance.now(); target = centers[i]; vel = flick * 10;
+  } else if (moved < 6 && downOn && axis !== 'y') openTheatre(+downOn.dataset.i);
+}
+addEventListener('pointerup', release);
+addEventListener('pointercancel', () => { downOn = null; moved = 99; release(); });
 track.addEventListener('dragstart', e => e.preventDefault());
+/* Trackpad sideways swipes glide too */
+let wheelT;
+track.addEventListener('wheel', e => {
+  if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+  e.preventDefault(); target = clamp(target + e.deltaX, lo(), hi());
+  clearTimeout(wheelT); wheelT = setTimeout(() => { target = centers[nearest(target)]; }, 140);
+}, { passive: false });
 let goI = 0, goT = 0;
 const step = d => goTo((performance.now() - goT < 700 ? goI : cur) + d);
-function goTo(i) {
-  i = clamp(i, 0, n - 1); goI = i; goT = performance.now(); const el = cards[i];
-  const target = Math.max(0, el.offsetLeft + el.offsetWidth / 2 - track.clientWidth / 2);
-  if (flat) track.scrollTo({ left: target, behavior: 'smooth' });
-  else scrollTo({ top: sec.offsetTop + target, behavior: 'smooth' });
-}
+function goTo(i) { i = clamp(i, 0, n - 1); goI = i; goT = performance.now(); target = centers[i]; }
 $('#wPrev').addEventListener('click', () => step(-1));
 $('#wNext').addEventListener('click', () => step(1));
 addEventListener('keydown', e => {
