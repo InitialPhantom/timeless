@@ -862,9 +862,7 @@ const stats = {
 };
 const fmt = v => v >= 1e6 ? (v / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : v >= 1e5 ? Math.round(v / 1e3) + 'K' : v >= 1e3 ? (v / 1e3).toFixed(1).replace(/\.0$/, '') + 'K' : String(v);
 const statLine = w => (stats[w.url] || []).map(([v, l]) => `<span>${fmt(v)} ${l}</span>`).join('<span aria-hidden="true">·</span>');
-/* Motion-blur transitions for both viewers: content slides in or out with a sideways smear */
-document.body.insertAdjacentHTML('beforeend', '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="vblur" x="-20%" y="-5%" width="140%" height="110%"><feGaussianBlur id="vblurStd" stdDeviation="0 0"/></filter></svg>');
-const vbStd = document.getElementById('vblurStd');
+/* Index viewer transition: content slides in or out sideways (no blur) */
 function smear(el, dir, inbound, dur) {
   el.getAnimations().forEach(a => a.cancel());
   if (reduce) return Promise.resolve();
@@ -873,15 +871,9 @@ function smear(el, dir, inbound, dur) {
     ? [{ opacity: 0, transform: `translateX(${dx}px)` }, { opacity: 1, transform: 'none' }]
     : [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: `translateX(${-dx}px)` }],
     { duration: dur, easing: inbound ? 'cubic-bezier(.16,.84,.24,1)' : 'cubic-bezier(.55,0,.85,.45)', fill: 'both' });
-  el.style.filter = 'url(#vblur)';
-  const t0 = performance.now();
   return new Promise(res => {
-    (function f(t) {
-      const k = Math.min(1, (t - t0) / dur), amt = inbound ? 18 * Math.pow(1 - k, 2.4) : 18 * Math.pow(k, 1.5);
-      vbStd.setAttribute('stdDeviation', `${amt.toFixed(2)} 0`);
-      if (k < 1) requestAnimationFrame(f); else { el.style.filter = ''; if (inbound) anim.cancel(); res(); }
-    })(t0);
-    setTimeout(() => { el.style.filter = ''; res(); }, dur + 400);   // safety if frames are paused
+    anim.finished.then(() => { if (inbound) anim.cancel(); res(); }, res);
+    setTimeout(() => { if (inbound) anim.cancel(); res(); }, dur + 400);   // safety: never leave it see-through
   });
 }
 /* Only the opened piece plays: background previews pause while a viewer is open */
