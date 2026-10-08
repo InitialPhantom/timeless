@@ -51,13 +51,19 @@ header nav a:hover { color: var(--red); }
 .bar { flex: 1; height: 1px; background: var(--line); position: relative; overflow: hidden; }
 .bar i { position: absolute; inset: 0; background: var(--red); transform-origin: 0 50%; transform: scaleX(0); }
 .count { font-variant-numeric: tabular-nums; min-width: 4.5em; }
-.track { position: relative; z-index: 1; display: flex; align-items: center; gap: clamp(1.5rem, 4vw, 3.5rem); padding-inline: max(clamp(16px, 4vw, 48px), calc(50vw - min(58vh, 600px) * .375)); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-block: 1rem; cursor: grab; user-select: none; }
+.track { position: relative; z-index: 1; display: flex; align-items: center; gap: clamp(1.5rem, 4vw, 3.5rem); padding-inline: max(clamp(16px, 4vw, 48px), calc(50vw - min(58vh, 600px) * .375)); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-block: 2.5rem; cursor: grab; user-select: none; }
 .track::-webkit-scrollbar { display: none; }
 .track.dragging { cursor: grabbing; scroll-snap-type: none; }
 .wnav { width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 50%; display: grid; place-items: center; color: var(--fg); transition: border-color .2s, color .2s; }
 .wnav:hover { border-color: var(--red); color: var(--red); }
 .piece { flex: none; scroll-snap-align: center; width: calc(min(58vh, 600px) * .75); display: grid; gap: .9rem; transform: scale(.88); opacity: .4; transition: transform .7s var(--ease), opacity .7s var(--ease); outline: none; }
 .piece.on { transform: none; opacity: 1; }
+.piece { position: relative; }
+.piece::before { content: ""; position: absolute; inset: -3% -16% 14% -16%; z-index: -1; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(215,20,26,.42) 62%, rgba(150,14,30,.2) 82%, transparent 100%); filter: blur(18px); opacity: 0; transition: opacity .6s var(--ease); }
+.piece:hover::before, .piece:focus-visible::before { opacity: 1; }
+.frame::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 1px rgba(215,20,26,0), inset 0 -60px 80px -40px rgba(215,20,26,0); transition: box-shadow .6s var(--ease); }
+.piece:hover .frame::after, .piece:focus-visible .frame::after { box-shadow: inset 0 0 0 1px rgba(215,20,26,.35), inset 0 -60px 80px -40px rgba(215,20,26,.22); }
 .piece:focus-visible .frame { outline: 1px solid var(--red); outline-offset: 6px; }
 .frame { position: relative; aspect-ratio: 3 / 4; overflow: hidden; background: #121214; box-shadow: 0 40px 70px -34px #000; animation: float 7s ease-in-out infinite; animation-delay: var(--fd, 0s); }
 @keyframes float { 0%, 100% { transform: translateY(0) rotate(-.35deg); box-shadow: 0 40px 70px -34px #000; } 50% { transform: translateY(-14px) rotate(.35deg); box-shadow: 0 60px 80px -40px #000; } }
@@ -144,6 +150,10 @@ dialog.theatre[open] { animation: thIn .7s var(--ease); }
 .th-c { position: absolute; width: 22px; height: 22px; border: 0 solid var(--red); }
 .th-c.a { top: -15px; left: -15px; border-width: 2px 0 0 2px; } .th-c.b { top: -15px; right: -15px; border-width: 2px 2px 0 0; }
 .th-c.c { bottom: -15px; left: -15px; border-width: 0 0 2px 2px; } .th-c.d { bottom: -15px; right: -15px; border-width: 0 2px 2px 0; }
+.th-stats { position: absolute; right: 18px; bottom: 18px; z-index: 2; display: flex; gap: .65rem; padding: .38rem .65rem; border-radius: 99px; background: rgba(7,7,8,.55); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  font: 500 .6rem/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: rgba(232,227,217,.72); font-variant-numeric: tabular-nums; pointer-events: none; animation: statIn .8s 1s var(--ease) both; }
+.th-stats:empty { display: none; }
+@keyframes statIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .th-bar { position: absolute; left: 10px; right: 10px; bottom: -26px; height: 1px; background: var(--line); }
 .th-bar i { position: absolute; inset: 0; background: var(--red); transform-origin: 0 50%; transform: scaleX(0); }
 .th-info { display: grid; gap: 1rem; max-width: 34ch; min-width: 0; }
@@ -281,6 +291,7 @@ footer { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wr
     <div class="th-num" id="thNum" aria-hidden="true"></div>
     <figure class="th-frame" id="thFrame">
       <div class="th-media" id="thMedia"></div>
+      <span class="th-stats" id="thStats"></span>
       <span class="th-c a"></span><span class="th-c b"></span><span class="th-c c"></span><span class="th-c d"></span>
       <div class="th-bar"><i id="thBar"></i></div>
     </figure>
@@ -769,6 +780,15 @@ addEventListener('scroll', lightWords, { passive: true }); lightWords();
 /* Theatre: the featured pieces get their own full-screen stage */
 const theatre = $('#theatre'), thMedia = () => $('#thMedia');
 let thI = 0;
+/* Engagement as of Oct 8, 2026 (Instagram hides view counts from logged-out visitors) */
+const stats = {
+  'video/DcDgUY7vCm2.mp4': [[50382, 'likes'], [492, 'comments']],
+  'video/Dcx8ysMPaKt.mp4': [[146349, 'likes'], [877, 'comments']],
+  'video/DdXlgRbPSmE.mp4': [[15351, 'likes'], [50, 'comments']],
+  'video/x2094704092870541493.mp4': [[53591, 'views'], [252, 'reposts'], [1971, 'likes']],
+  'video/x2087104545768018055.mp4': [[60267, 'views'], [185, 'reposts'], [2113, 'likes']]
+};
+const fmt = v => v >= 1e6 ? (v / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : v >= 1e5 ? Math.round(v / 1e3) + 'K' : v >= 1e3 ? (v / 1e3).toFixed(1).replace(/\.0$/, '') + 'K' : String(v);
 function fillTheatre() {
   const w = works[thI], prev = works[(thI - 1 + n) % n], next = works[(thI + 1) % n];
   $('#thNum').innerHTML = `${String(thI + 1).padStart(2, '0')}<small>of ${String(n).padStart(2, '0')}</small>`;
@@ -784,6 +804,8 @@ function fillTheatre() {
   $('#thLink').href = w.url; $('#thLink').textContent = w.url.includes('x.com') ? 'View on X ↗' : 'View on Instagram ↗';
   $('#thPrevT').textContent = prev.title; $('#thNextT').textContent = next.title;
   $('#thBar').style.transform = 'scaleX(0)';
+  const st = stats[w.video], sEl = $('#thStats'); sEl.style.animation = 'none'; sEl.offsetHeight; sEl.style.animation = '';
+  sEl.innerHTML = st ? st.map(([v, l]) => `<span>${fmt(v)} ${l}</span>`).join('<span aria-hidden="true">·</span>') : '';
   const v = fresh.querySelector('video'), snd = $('#thSound');
   snd.hidden = !v;
   if (v) {
