@@ -135,7 +135,8 @@ header nav a:hover { color: var(--red); }
 /* Theatre: full-screen view for the five featured pieces */
 dialog.theatre { width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: #070708; color: var(--fg); overflow: hidden; }
 dialog.theatre::backdrop { background: #000; }
-dialog.theatre[open]::backdrop, dialog.viewer[open]::backdrop { animation: bdIn .5s var(--ease); }
+dialog.theatre[open] { animation: thIn .7s var(--ease); }
+dialog.viewer[open]::backdrop { animation: bdIn .5s var(--ease); }
 @keyframes bdIn { from { opacity: 0; } }
 @keyframes thIn { from { opacity: 0; } }
 .th-ink { position: absolute; inset: 0; color: var(--red); opacity: .16; pointer-events: none;
@@ -999,23 +1000,13 @@ function openTheatre(i) {
   if (!$('#thInk').innerHTML) $('#thInk').innerHTML = $('#ink').innerHTML;
   hush();
   delete theatre.dataset.clean;
-  const opening = !theatre.open;
-  if (opening) theatre.showModal();
+  if (!theatre.open) theatre.showModal();
   fillTheatre();
-  if (opening) smear(theatre, 1, true, 600);
 }
-let thBusy = false;
-async function thGo(d) {
-  if (thBusy) return; thBusy = true;
-  const g = theatre.querySelector('.th-grid'); thMedia().querySelectorAll('video').forEach(v => v.pause());
-  await smear(g, d, false, 200);
-  thI = (thI + d + n) % n; fillTheatre();
-  await smear(g, d, true, 480); thBusy = false;
-}
+const thGo = d => { thI = (thI + d + n) % n; fillTheatre(); };
 $('#thPrev').addEventListener('click', () => thGo(-1));
 $('#thNext').addEventListener('click', () => thGo(1));
-$('#thClose').addEventListener('click', () => closeSmooth(theatre));
-theatre.addEventListener('cancel', e => { e.preventDefault(); closeSmooth(theatre); });
+$('#thClose').addEventListener('click', () => { theatre.close(); afterClose(theatre); });
 $('#thSound').addEventListener('click', () => { const v = thMedia().querySelector('video'); if (!v) return; v.muted = !v.muted; if (v.paused) v.play().catch(() => {}); $('#thSound').textContent = v.muted ? 'Unmute' : 'Mute'; });
 theatre.addEventListener('close', () => afterClose(theatre));
 
