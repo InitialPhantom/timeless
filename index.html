@@ -135,7 +135,8 @@ header nav a:hover { color: var(--red); }
 /* Theatre: full-screen view for the five featured pieces */
 dialog.theatre { width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: #070708; color: var(--fg); overflow: hidden; }
 dialog.theatre::backdrop { background: #000; }
-dialog.theatre[open] { animation: thIn .7s var(--ease); }
+dialog.theatre[open]::backdrop, dialog.viewer[open]::backdrop { animation: bdIn .5s var(--ease); }
+@keyframes bdIn { from { opacity: 0; } }
 @keyframes thIn { from { opacity: 0; } }
 .th-ink { position: absolute; inset: 0; color: var(--red); opacity: .16; pointer-events: none;
   -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 50%, transparent 30%, #000 80%); mask-image: radial-gradient(ellipse 75% 70% at 50% 50%, transparent 30%, #000 80%); }
@@ -438,6 +439,46 @@ const all = [
   "audioLabel": "Music"
  },
  {
+  "title": "Yggdrasil",
+  "date": "Sep 7, 2026",
+  "type": "Video",
+  "poster": "art/Dc-RMhkPZ3T.jpg",
+  "video": "video/Dc-RMhkPZ3T.mp4",
+  "text": [
+   "A short 15-second scene, a new concept I've been playing with in the background lately (an experiment perhaps).",
+   "Visuals are from Midjourney and the clip was done with Seedance 2.5, Seed Audio for the voice reference and then post-edited with Premiere Pro.",
+   "This is also my first time using Japanese dubbing! You can tell me if the translation is accurate or not. 🤍 (I did the subtitles too)."
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/p/Dc-RMhkPZ3T/"
+ },
+ {
+  "title": "every dune is a warning",
+  "date": "Aug 3, 2026",
+  "type": "Video",
+  "poster": "art/DbmK-w7PAKg.jpg",
+  "video": "video/DbmK-w7PAKg.mp4",
+  "text": [
+   "I loved the piece from this from the very start! Been exploring different styles in Midjourney lately so I'll be sharing some new ones sooner or later too.",
+   "MJ + Seedance 2.0, inside of Runway and upscaled with Topaz."
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/p/DbmK-w7PAKg/"
+ },
+ {
+  "title": "The hunt for the shadow hounds begins where the light ends.",
+  "date": "Jul 24, 2026",
+  "type": "Video",
+  "poster": "art/DbLWz7nP-vM.jpg",
+  "video": "video/DbLWz7nP-vM.mp4",
+  "text": [
+   "This is the same character from before but in a different scene, used an old piece of mine to put the reference in (for the hound), and generated a whole routine for it!",
+   "Made with Midjourney and Seedance 2.0 inside of Runway."
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/p/DbLWz7nP-vM/"
+ },
+ {
   "title": "Oni V2.0",
   "date": "Sep 15, 2026",
   "type": "Carousel · 5 images",
@@ -479,6 +520,51 @@ const all = [
    "art/Dd7o3QrEyul-7.jpg",
    "art/Dd7o3QrEyul-8.jpg",
    "art/Dd7o3QrEyul-9.jpg"
+  ]
+ },
+ {
+  "title": "Pantheon",
+  "date": "Jul 26, 2026",
+  "type": "Carousel · 9 images",
+  "poster": "art/DbPbTpkFFDP-1.jpg",
+  "video": "",
+  "text": [
+   "A huge thank you for the 20k followers! Here are some of my new and old pieces from just a month ago, some might be familiar, I'll let you tell me what those are 👀",
+   "Appreciate all the support!"
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/p/DbPbTpkFFDP/",
+  "slides": [
+   "art/DbPbTpkFFDP-1.jpg",
+   "art/DbPbTpkFFDP-2.jpg",
+   "art/DbPbTpkFFDP-3.jpg",
+   "art/DbPbTpkFFDP-4.jpg",
+   "art/DbPbTpkFFDP-5.jpg",
+   "art/DbPbTpkFFDP-6.jpg",
+   "art/DbPbTpkFFDP-7.jpg",
+   "art/DbPbTpkFFDP-8.jpg",
+   "art/DbPbTpkFFDP-9.jpg"
+  ]
+ },
+ {
+  "title": "Sazoku",
+  "date": "Jul 2, 2026",
+  "type": "Carousel · 7 images",
+  "poster": "art/DaR0-LvlLuS-1.jpg",
+  "video": "",
+  "text": [
+   "Some recent pieces I've been working on! Sand Raiders is what I'd like to call them. And also, this is using the new Midjourney v8.2 model, it's amazing, although I feel like they kinda nerfed it today, idk why lol."
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/p/DaR0-LvlLuS/",
+  "slides": [
+   "art/DaR0-LvlLuS-1.jpg",
+   "art/DaR0-LvlLuS-2.jpg",
+   "art/DaR0-LvlLuS-3.jpg",
+   "art/DaR0-LvlLuS-4.jpg",
+   "art/DaR0-LvlLuS-5.jpg",
+   "art/DaR0-LvlLuS-6.jpg",
+   "art/DaR0-LvlLuS-7.jpg"
   ]
  },
  {
@@ -766,10 +852,53 @@ const stats = {
   'https://www.instagram.com/reel/DdS7_4GT6pc/': [[3203, "likes"], [37, "comments"]],
   'https://www.instagram.com/reel/Dd9C7kfPqfn/': [[744, "likes"], [17, "comments"]],
   'https://www.instagram.com/reel/DdttZhnywGN/': [[1739, "likes"], [38, "comments"]],
-  'https://www.instagram.com/reel/DdQVdxhP0LU/': [[360, "likes"], [17, "comments"]]
+  'https://www.instagram.com/reel/DdQVdxhP0LU/': [[360, "likes"], [17, "comments"]],
+  'https://www.instagram.com/p/Dc-RMhkPZ3T/': [[476, "likes"], [13, "comments"]],
+  'https://www.instagram.com/p/DbmK-w7PAKg/': [[5290, "likes"], [34, "comments"]],
+  'https://www.instagram.com/p/DbLWz7nP-vM/': [[5297, "likes"], [75, "comments"]],
+  'https://www.instagram.com/p/DbPbTpkFFDP/': [[2523, "likes"], [27, "comments"]],
+  'https://www.instagram.com/p/DaR0-LvlLuS/': [[5727, "likes"], [27, "comments"]]
 };
 const fmt = v => v >= 1e6 ? (v / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : v >= 1e5 ? Math.round(v / 1e3) + 'K' : v >= 1e3 ? (v / 1e3).toFixed(1).replace(/\.0$/, '') + 'K' : String(v);
 const statLine = w => (stats[w.url] || []).map(([v, l]) => `<span>${fmt(v)} ${l}</span>`).join('<span aria-hidden="true">·</span>');
+/* Motion-blur transitions for both viewers: content slides in or out with a sideways smear */
+document.body.insertAdjacentHTML('beforeend', '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="vblur" x="-20%" y="-5%" width="140%" height="110%"><feGaussianBlur id="vblurStd" stdDeviation="0 0"/></filter></svg>');
+const vbStd = document.getElementById('vblurStd');
+function smear(el, dir, inbound, dur) {
+  el.getAnimations().forEach(a => a.cancel());
+  if (reduce) return Promise.resolve();
+  const dx = 56 * dir;
+  const anim = el.animate(inbound
+    ? [{ opacity: 0, transform: `translateX(${dx}px)` }, { opacity: 1, transform: 'none' }]
+    : [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: `translateX(${-dx}px)` }],
+    { duration: dur, easing: inbound ? 'cubic-bezier(.16,.84,.24,1)' : 'cubic-bezier(.55,0,.85,.45)', fill: 'both' });
+  el.style.filter = 'url(#vblur)';
+  const t0 = performance.now();
+  return new Promise(res => {
+    (function f(t) {
+      const k = Math.min(1, (t - t0) / dur), amt = inbound ? 18 * Math.pow(1 - k, 2.4) : 18 * Math.pow(k, 1.5);
+      vbStd.setAttribute('stdDeviation', `${amt.toFixed(2)} 0`);
+      if (k < 1) requestAnimationFrame(f); else { el.style.filter = ''; if (inbound) anim.cancel(); res(); }
+    })(t0);
+    setTimeout(() => { el.style.filter = ''; res(); }, dur + 400);   // safety if frames are paused
+  });
+}
+/* Only the opened piece plays: background previews pause while a viewer is open */
+function hush() { document.querySelectorAll('#preview video, .piece video').forEach(v => v.pause()); }
+function wake() { const pvv = [...pv.querySelectorAll('video')].pop(); if (pvv && !reduce) { pvv.muted = true; pvv.play().catch(() => {}); } playFront(); }
+async function closeSmooth(d) {
+  if (d.dataset.closing) return; d.dataset.closing = '1';
+  d.querySelectorAll('video').forEach(v => v.pause());
+  await smear(d, 1, false, 340);
+  d.close(); d.getAnimations().forEach(a => a.cancel()); delete d.dataset.closing;
+  afterClose(d);
+}
+/* Runs once per close, whichever way the dialog was closed */
+function afterClose(d) {
+  if (d.dataset.clean) return; d.dataset.clean = '1';
+  d.querySelectorAll('video').forEach(v => v.remove());
+  wake();
+}
 const viewer = $('#viewer'), vMedia = $('#vMedia');
 let vList = works, vI = 0;
 function fillViewer() {
@@ -798,14 +927,25 @@ function showSlide(i) {
 }
 function openViewer(i, fromIndex = false) {
   vList = fromIndex ? rest : works; vI = i;
-  cards.forEach(el => { const v = el.querySelector('video'); if (v) v.pause(); });
-  if (!viewer.open) viewer.showModal(); fillViewer();
+  hush();
+  delete viewer.dataset.clean;
+  if (!viewer.open) viewer.showModal();
+  fillViewer(); smear(viewer, 1, true, 560);
 }
-viewer.addEventListener('close', () => { vMedia.innerHTML = ''; playFront(); });
-$('#vClose').addEventListener('click', () => viewer.close());
-$('#vNext').addEventListener('click', () => { vI = (vI + 1) % vList.length; fillViewer(); });
-$('#vPrev').addEventListener('click', () => { vI = (vI - 1 + vList.length) % vList.length; fillViewer(); });
-viewer.addEventListener('click', e => { if (e.target === viewer) viewer.close(); });
+let vBusy = false;
+async function vStep(d) {
+  if (vBusy) return; vBusy = true;
+  const g = viewer.querySelector('.v-grid'); vMedia.querySelectorAll('video').forEach(v => v.pause());
+  await smear(g, d, false, 200);
+  vI = (vI + d + vList.length) % vList.length; fillViewer();
+  await smear(g, d, true, 460); vBusy = false;
+}
+viewer.addEventListener('cancel', e => { e.preventDefault(); closeSmooth(viewer); });
+viewer.addEventListener('close', () => afterClose(viewer));
+$('#vClose').addEventListener('click', () => closeSmooth(viewer));
+$('#vNext').addEventListener('click', () => vStep(1));
+$('#vPrev').addEventListener('click', () => vStep(-1));
+viewer.addEventListener('click', e => { if (e.target === viewer) closeSmooth(viewer); });
 
 /* About: words light up as the paragraph scrolls through the viewport */
 const st = $('#statement');
@@ -857,16 +997,27 @@ function fillTheatre() {
 function openTheatre(i) {
   thI = i;
   if (!$('#thInk').innerHTML) $('#thInk').innerHTML = $('#ink').innerHTML;
-  cards.forEach(el => { const v = el.querySelector('video'); if (v) v.pause(); });
-  if (!theatre.open) theatre.showModal();
+  hush();
+  delete theatre.dataset.clean;
+  const opening = !theatre.open;
+  if (opening) theatre.showModal();
   fillTheatre();
+  if (opening) smear(theatre, 1, true, 600);
 }
-const thGo = d => { thI = (thI + d + n) % n; fillTheatre(); };
+let thBusy = false;
+async function thGo(d) {
+  if (thBusy) return; thBusy = true;
+  const g = theatre.querySelector('.th-grid'); thMedia().querySelectorAll('video').forEach(v => v.pause());
+  await smear(g, d, false, 200);
+  thI = (thI + d + n) % n; fillTheatre();
+  await smear(g, d, true, 480); thBusy = false;
+}
 $('#thPrev').addEventListener('click', () => thGo(-1));
 $('#thNext').addEventListener('click', () => thGo(1));
-$('#thClose').addEventListener('click', () => theatre.close());
+$('#thClose').addEventListener('click', () => closeSmooth(theatre));
+theatre.addEventListener('cancel', e => { e.preventDefault(); closeSmooth(theatre); });
 $('#thSound').addEventListener('click', () => { const v = thMedia().querySelector('video'); if (!v) return; v.muted = !v.muted; if (v.paused) v.play().catch(() => {}); $('#thSound').textContent = v.muted ? 'Unmute' : 'Mute'; });
-theatre.addEventListener('close', () => { thMedia().innerHTML = ''; playFront(); });
+theatre.addEventListener('close', () => afterClose(theatre));
 
 /* Contact: tattoo discs, same linework as the work section */
 (function tatDisc() {
