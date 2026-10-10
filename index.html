@@ -8,7 +8,7 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Manrope:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Manrope:wght@400;500&family=Noto+Serif+JP:wght@700&text=%E6%99%82&display=swap">
 <style>
 /* Layout: one room, one deck of frames under a red sun. Everything else stays out of the way. */
 :root {
@@ -42,13 +42,14 @@ header nav a:hover { color: var(--red); }
 .work { position: relative; margin-inline: calc(clamp(16px, 4vw, 48px) * -1); }
 .pin { position: relative; min-height: min(100vh, 900px); overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; }
 #index { position: relative; }
-/* About: painted cherry-blossom branches in the right corners (static canvas) */
+/* About: one oversized outlined 時 ("time") with a small crimson seal */
 #about { position: relative; overflow: hidden; }
-#about > :not(.bloom) { position: relative; z-index: 1; }
-.bloom { position: absolute; right: 0; width: clamp(280px, 42vw, 640px); aspect-ratio: 16 / 10; pointer-events: none; opacity: .82; }
-.bloom.tr { top: 0; }
-.bloom.br { bottom: 0; }
-@media (max-width: 720px) { .bloom { width: 70vw; opacity: .45; } }
+#about > :not(.ji):not(.hanko) { position: relative; z-index: 1; }
+.ji { position: absolute; right: clamp(-2rem, -1vw, 0rem); top: 50%; transform: translateY(-50%); font: 700 clamp(15rem, 34vw, 31rem)/1 "Noto Serif JP", "Yu Mincho", "Hiragino Mincho ProN", serif;
+  color: transparent; -webkit-text-stroke: 1.2px rgba(232,227,217,.08); user-select: none; pointer-events: none; }
+.hanko { position: absolute; right: clamp(1rem, 4vw, 3rem); bottom: clamp(2rem, 5vw, 3.5rem); width: 52px; height: 52px; display: grid; place-items: center; background: var(--red); color: var(--bg); border-radius: 5px;
+  font: 700 1.9rem/1 "Noto Serif JP", "Yu Mincho", serif; transform: rotate(-4deg); box-shadow: inset 0 0 0 3px var(--red), inset 0 0 0 4.5px var(--bg); opacity: .4; pointer-events: none; }
+@media (max-width: 720px) { .ji { font-size: 15rem; -webkit-text-stroke-color: rgba(232,227,217,.05); } .hanko { width: 42px; height: 42px; font-size: 1.5rem; } }
 #index > :not(.ink) { position: relative; z-index: 1; }
 .ink.ink-w { color: var(--fg); opacity: .07; -webkit-mask-image: linear-gradient(to bottom, transparent 35%, #000 85%); mask-image: linear-gradient(to bottom, transparent 35%, #000 85%); }
 .ink { position: absolute; inset: 0; pointer-events: none; color: var(--red); opacity: .2;
@@ -282,8 +283,8 @@ footer { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wr
   </section>
 
   <section class="sec" id="about">
-    <canvas class="bloom tr" id="bloomTop" aria-hidden="true"></canvas>
-    <canvas class="bloom br" id="bloomBottom" aria-hidden="true"></canvas>
+    <div class="ji" aria-hidden="true">時</div>
+    <div class="hanko" aria-hidden="true">時</div>
     <div class="sec-head"><h2>About</h2><span class="small">Philippines</span></div>
     <p class="statement" id="statement">AI Creative crafting cinematic characters and concept pieces rooted in <span class="red">East Asian</span> and <span class="red">Anime aesthetics.</span></p>
     <div class="stats">
@@ -974,101 +975,6 @@ $('#thNext').addEventListener('click', () => thGo(1));
 $('#thClose').addEventListener('click', () => { theatre.close(); afterClose(theatre); });
 $('#thSound').addEventListener('click', () => { const v = thMedia().querySelector('video'); if (!v) return; v.muted = !v.muted; if (v.paused) v.play().catch(() => {}); $('#thSound').textContent = v.muted ? 'Unmute' : 'Mute'; });
 theatre.addEventListener('close', () => afterClose(theatre));
-
-/* About: cherry blossoms painted once on canvas, sumi-e branches and soft layered petals */
-(function blooms() {
-  const W = 640, H = 400;
-  function paint(cv, seed, start) {
-    const dpr = Math.min(devicePixelRatio || 1, 2), cw = cv.clientWidth; if (!cw) return;
-    cv.width = Math.round(cw * dpr); cv.height = Math.round(cw * H / W * dpr);
-    const x = cv.getContext('2d'), r = rngSeed(seed), k = cv.width / W;
-    x.setTransform(k, 0, 0, k, 0, 0); x.clearRect(0, 0, W, H); x.lineCap = 'round'; x.lineJoin = 'round';
-    const flowers = [];
-    /* one brush segment: dark body, a lighter edge, and dry-brush streaks */
-    function inkSeg(x0, y0, x1, y1, w) {
-      const nx = -(y1 - y0), ny = x1 - x0, nl = Math.hypot(nx, ny) || 1, ox = nx / nl, oy = ny / nl;
-      x.strokeStyle = 'rgba(96,80,72,.97)'; x.lineWidth = w; x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1, y1); x.stroke();
-      x.strokeStyle = 'rgba(176,156,142,.5)'; x.lineWidth = Math.max(.6, w * .26);
-      x.beginPath(); x.moveTo(x0 - ox * w * .26, y0 - oy * w * .26); x.lineTo(x1 - ox * w * .26, y1 - oy * w * .26); x.stroke();
-      for (let i = 0; i < Math.max(1, w * .5); i++) {
-        const o = (r() - .5) * w * .8; x.strokeStyle = r() < .55 ? 'rgba(30,24,22,.6)' : 'rgba(200,182,168,.2)'; x.lineWidth = .5 + r() * .7;
-        const t0 = r() * .4, t1 = .6 + r() * .4;
-        x.beginPath(); x.moveTo(x0 + (x1 - x0) * t0 + ox * o, y0 + (y1 - y0) * t0 + oy * o); x.lineTo(x0 + (x1 - x0) * t1 + ox * o, y0 + (y1 - y0) * t1 + oy * o); x.stroke();
-      }
-    }
-    function grow(px, py, ang, len, w, depth, droop) {
-      const steps = Math.max(5, Math.round(len / 13)), seg = len / steps;
-      for (let i = 0; i < steps; i++) {
-        const t = i / steps;
-        ang += (r() - .5) * .34 + droop;
-        const nx = px + Math.cos(ang) * seg, ny = py + Math.sin(ang) * seg, ww = Math.max(.9, w * (1 - t * .82));
-        inkSeg(px, py, nx, ny, ww);
-        if (depth < 3 && i > 1 && i < steps - 1 && r() < .24) {
-          const side = r() < .5 ? -1 : 1;
-          x.fillStyle = 'rgba(54,42,38,.95)'; x.beginPath(); x.ellipse(nx, ny, ww * .55, ww * .4, ang, 0, 7); x.fill();
-          grow(nx, ny, ang + side * (.5 + r() * .55), len * (.32 + r() * .26), ww * .62, depth + 1, droop * 1.4);
-        }
-        if (depth >= 1 && r() < .1) flowers.push({ x: nx + (r() - .5) * 10, y: ny + (r() - .5) * 10, d: depth });
-        px = nx; py = ny;
-      }
-      flowers.push({ x: px, y: py, d: depth, tip: true });
-    }
-    grow(start.x, start.y, start.a, start.len, 15, 0, start.droop);
-    /* petals: bone edge to crimson heart, layered with a soft outline */
-    function petal(len, wid) {
-      x.beginPath(); x.moveTo(0, 0);
-      x.bezierCurveTo(len * .32, -wid * 1.05, len * .92, -wid * .95, len, -wid * .16);
-      x.lineTo(len * .84, 0); x.lineTo(len, wid * .16);
-      x.bezierCurveTo(len * .92, wid * .95, len * .32, wid * 1.05, 0, 0); x.closePath();
-    }
-    function blossom(cx, cy, rad, rot, tilt) {
-      x.save(); x.translate(cx, cy); x.rotate(rot); x.scale(1, tilt);
-      for (let i = 0; i < 5; i++) {
-        x.save(); x.rotate(i * Math.PI * 2 / 5 + (r() - .5) * .18);
-        const g = x.createRadialGradient(0, 0, 0, 0, 0, rad);
-        g.addColorStop(0, 'rgba(176,16,30,.95)'); g.addColorStop(.32, 'rgba(214,110,124,.92)'); g.addColorStop(.7, 'rgba(240,214,214,.94)'); g.addColorStop(1, 'rgba(250,240,236,.96)');
-        petal(rad * (.92 + r() * .14), rad * .46);
-        x.fillStyle = g; x.fill();
-        x.strokeStyle = 'rgba(120,30,40,.35)'; x.lineWidth = .7; x.stroke();
-        x.strokeStyle = 'rgba(160,40,55,.25)'; x.lineWidth = .5; x.beginPath(); x.moveTo(rad * .2, 0); x.lineTo(rad * .72, (r() - .5) * rad * .1); x.stroke();
-        x.restore();
-      }
-      for (let i = 0; i < 11; i++) {
-        const a = r() * Math.PI * 2, l = rad * (.32 + r() * .2), ex = Math.cos(a) * l, ey = Math.sin(a) * l;
-        x.strokeStyle = 'rgba(150,20,32,.75)'; x.lineWidth = .7; x.beginPath(); x.moveTo(0, 0); x.lineTo(ex, ey); x.stroke();
-        x.fillStyle = 'rgba(232,186,96,.95)'; x.beginPath(); x.arc(ex, ey, rad * .055, 0, 7); x.fill();
-      }
-      x.fillStyle = 'rgba(120,10,20,1)'; x.beginPath(); x.arc(0, 0, rad * .13, 0, 7); x.fill();
-      x.restore();
-    }
-    function bud(cx, cy, rad, rot) {
-      x.save(); x.translate(cx, cy); x.rotate(rot);
-      x.fillStyle = 'rgba(92,70,62,.95)'; x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(rad * .3, -rad * .45, rad * .55, 0); x.quadraticCurveTo(rad * .3, rad * .45, 0, 0); x.fill();
-      const g = x.createRadialGradient(rad * .55, 0, 0, rad * .7, 0, rad * .75); g.addColorStop(0, 'rgba(236,170,178,.95)'); g.addColorStop(1, 'rgba(180,24,40,.95)');
-      x.fillStyle = g; x.beginPath(); x.ellipse(rad * .8, 0, rad * .48, rad * .34, 0, 0, 7); x.fill();
-      x.restore();
-    }
-    const shown = flowers.filter(f => f.x > 10 && f.x < W - 4 && f.y > 8 && f.y < H - 8).sort(() => r() - .5).slice(0, 15);
-    shown.forEach(f => {
-      const rad = (f.d >= 2 ? 11 : 15) + r() * 9;
-      if (f.tip && r() < .5) bud(f.x, f.y, rad * 1.1, r() * Math.PI * 2);
-      else blossom(f.x, f.y, rad, r() * Math.PI * 2, .72 + r() * .28);
-    });
-    for (let i = 0; i < 5; i++) {   /* a few loose petals resting in the air */
-      x.save(); x.translate(W * (.15 + r() * .6), H * (.25 + r() * .7)); x.rotate(r() * Math.PI * 2); x.scale(1, .55 + r() * .3);
-      const g = x.createLinearGradient(0, 0, 12, 0); g.addColorStop(0, 'rgba(206,90,104,.85)'); g.addColorStop(1, 'rgba(246,232,230,.9)');
-      petal(12 + r() * 5, 5.5); x.fillStyle = g; x.fill(); x.restore();
-    }
-  }
-  const top = $('#bloomTop'), bottom = $('#bloomBottom');
-  const draw = () => {
-    paint(top, 41, { x: W + 20, y: 40, a: Math.PI - .16, len: 540, droop: -.011 });
-    paint(bottom, 77, { x: W + 20, y: H - 16, a: Math.PI + .5, len: 500, droop: -.009 });
-  };
-  draw();
-  let lastW = innerWidth;
-  addEventListener('resize', () => { if (Math.abs(innerWidth - lastW) > 40) { lastW = innerWidth; draw(); } });
-})();
 
 /* Contact: tattoo discs, same linework as the work section */
 (function tatDisc() {
