@@ -41,11 +41,6 @@ header nav a:hover { color: var(--red); }
 /* Work: vertical scroll drives a sideways track */
 .work { position: relative; margin-inline: calc(clamp(16px, 4vw, 48px) * -1); }
 .pin { position: relative; min-height: min(100vh, 900px); overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; }
-#index { position: relative; }
-#index > :not(.ink):not(.idx-tex) { position: relative; z-index: 1; }
-.idx-tex { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: .6; filter: blur(.4px);
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.35) 0%, rgba(0,0,0,.6) 40%, #000 90%); mask-image: linear-gradient(to bottom, rgba(0,0,0,.35) 0%, rgba(0,0,0,.6) 40%, #000 90%); }
-.ink.ink-w { color: var(--fg); opacity: .06; -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,.6) 40%, #000 85%); mask-image: linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,.6) 40%, #000 85%); }
 .ink { position: absolute; inset: 0; pointer-events: none; color: var(--red); opacity: .2;
   -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 55%, #000 25%, transparent 78%); mask-image: radial-gradient(ellipse 85% 75% at 50% 55%, #000 25%, transparent 78%); }
 .ink svg { width: 100%; height: 100%; display: block; }
@@ -261,15 +256,13 @@ footer { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wr
     <div class="pin">
       <div class="ink" id="ink" aria-hidden="true"></div>
       <canvas class="fog" id="fog" aria-hidden="true"></canvas>
-      <div class="work-head"><h1>Pieces</h1></div>
+      <div class="work-head"></div>
       <div class="track" id="track"></div>
       <div class="work-foot small"><span class="count" id="count">03 / 05</span><span class="bar"><i id="bar"></i></span><span id="meta"></span><button class="wnav" id="wPrev" aria-label="Previous piece">←</button><button class="wnav" id="wNext" aria-label="Next piece">→</button></div>
     </div>
   </section>
 
   <section class="sec" id="index">
-    <canvas class="idx-tex" id="idxTex" aria-hidden="true"></canvas>
-    <div class="ink ink-w" id="inkIdx" aria-hidden="true"></div>
     <div class="sec-head"><h2>Index</h2></div>
     <div class="index">
       <ul class="rows" id="rows"></ul>
@@ -777,63 +770,6 @@ function drawFog(t) {
     curls += `<path d="${d}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="${tail}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>`;
   }
   $('#ink').innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">${curls}${waves}</svg>`;
-  /* Index variation: monotone ukiyo-e ocean, inspired by the classic great-wave prints:
-     solid crescent waves with a hollow underside, stripes along the body, foam lumps and hooked claws */
-  const rw = rngSeed(31), BG = '#0C0C0D';
-  const bez = (p0, p1, p2, p3, n) => { const out = []; for (let i = 0; i <= n; i++) { const t = i / n, u = 1 - t; out.push([u*u*u*p0[0] + 3*u*u*t*p1[0] + 3*u*t*t*p2[0] + t*t*t*p3[0], u*u*u*p0[1] + 3*u*u*t*p1[1] + 3*u*t*t*p2[1] + t*t*t*p3[1]]); } return out; };
-  const smooth = p => {
-    let d = `M${p[0][0].toFixed(1)} ${p[0][1].toFixed(1)}`;
-    for (let i = 0; i < p.length - 1; i++) {
-      const a = p[i - 1] || p[i], b = p[i], c = p[i + 1], e = p[i + 2] || c;
-      d += `C${(b[0] + (c[0] - a[0]) / 6).toFixed(1)} ${(b[1] + (c[1] - a[1]) / 6).toFixed(1)} ${(c[0] - (e[0] - b[0]) / 6).toFixed(1)} ${(c[1] - (e[1] - b[1]) / 6).toFixed(1)} ${c[0].toFixed(1)} ${c[1].toFixed(1)}`;
-    }
-    return d;
-  };
-  function wave(ox, base, s, dir, foam) {
-    const P = ([x, y]) => [ox + x * s * dir, base + y * s];
-    /* outer edge: the back swells up to the crest, then the lip reaches forward and down */
-    const back = bez([-.1, 0], [-.06, -.55], [.12, -.98], [.52, -1], 26);
-    const lip = bez([.52, -1], [.76, -1.01], [.95, -.9], [.98, -.7], 12).slice(1);
-    const curl = bez([.98, -.7], [1, -.6], [.93, -.53], [.86, -.57], 6).slice(1);
-    const outer = back.concat(lip, curl);
-    /* inner edge: the hollow face curls back under the lip down to the sea */
-    const inner = bez([.8, 0], [.5, -.3], [.66, -.6], [.86, -.57], outer.length - 1);
-    let g = `<path d="${smooth(outer.map(P))}L${P(inner[inner.length - 1]).join(' ')}${smooth(inner.slice().reverse().map(P)).replace(/^M[^C]*/, '')}Z" fill="${BG}"/>`;
-    g += `<path d="${smooth(outer.map(P))}${smooth(inner.slice().reverse().map(P)).replace(/^M/, 'L')}Z" fill="currentColor" fill-opacity=".22"/>`;
-    /* stripes running along the body, from the sea up and over into the lip */
-    for (let k = 1; k <= 9; k++) {
-      const f = k / 10, band = outer.map((p, i) => [p[0] + (inner[i][0] - p[0]) * f, p[1] + (inner[i][1] - p[1]) * f]);
-      g += `<path d="${smooth(band.map(P))}" fill="none" stroke="currentColor" stroke-opacity=".55" stroke-width="${(1.6 - k * .08).toFixed(2)}" stroke-linecap="round"/>`;
-    }
-    g += `<path d="${smooth(outer.map(P))}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>`;
-    /* foam: overlapping lumps along the crest, hooked claws hanging off the lip */
-    const crest = outer.slice(Math.round(back.length * .6), outer.length - 2);
-    crest.forEach((p, i) => {
-      const q = crest[Math.min(i + 1, crest.length - 1)], tx = q[0] - p[0], ty = q[1] - p[1], tl = Math.hypot(tx, ty) || 1;
-      const ux = tx / tl, uy = ty / tl, nx = uy, ny = -ux, grow = .6 + i / crest.length;
-      for (let j = 0; j < 3; j++) {
-        const sz = (.008 + rw() * .009) * grow, off = (rw() - .3) * sz * 1.4, c = P([p[0] + nx * off + ux * (rw() - .5) * .02, p[1] + ny * off + uy * (rw() - .5) * .02]);
-        g += `<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${(sz * s).toFixed(1)}" fill="currentColor" fill-opacity=".85"/>`;
-      }
-      if (i % 2 === 0 && i > crest.length * .2) {
-        const L = (.035 + rw() * .03) * grow, pt = (u, v) => P([p[0] + nx * L * u + ux * L * v, p[1] + ny * L * u + uy * L * v]);
-        const claw = [pt(0, 0), pt(.6, .2), pt(.95, .6), pt(.75, 1), pt(.4, .95), pt(.32, .68)];
-        g += `<path d="${smooth(claw)}" fill="none" stroke="currentColor" stroke-width="${(1.2 + L * s * .03).toFixed(1)}" stroke-linecap="round"/>`;
-      }
-    });
-    /* spray drifting off the top of the crest */
-    for (let i = 0; i < 14; i++) { const c = P([.3 + rw() * .65, -1.02 - rw() * .14]); g += `<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${(1 + rw() * 2).toFixed(1)}" fill="currentColor" fill-opacity=".8"/>`; }
-    return g;
-  }
-  /* rolling sea along the bottom: banded swells with small foam caps */
-  let sea = '';
-  for (let k = 0; k < 6; k++) {
-    const y0 = H - 6 - k * 18, sp = [];
-    for (let xx = -60; xx <= W + 60; xx += 60) sp.push([xx, y0 + Math.sin(xx * .009 + k * .8) * 9]);
-    sea += `<path d="${smooth(sp)}" fill="none" stroke="currentColor" stroke-opacity=".5" stroke-width="1.1" stroke-linecap="round"/>`;
-  }
-  const seaArt = sea + wave(1150, H + 8, 150, 1, .5) + wave(760, H + 8, 215, 1, .55) + wave(70, H + 12, 560, 1, .6);
-  $('#inkIdx').innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice">${seaArt}</svg>`;
 })();
 function rngSeed(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
@@ -1019,25 +955,6 @@ $('#thNext').addEventListener('click', () => thGo(1));
 $('#thClose').addEventListener('click', () => { theatre.close(); afterClose(theatre); });
 $('#thSound').addEventListener('click', () => { const v = thMedia().querySelector('video'); if (!v) return; v.muted = !v.muted; if (v.paused) v.play().catch(() => {}); $('#thSound').textContent = v.muted ? 'Unmute' : 'Mute'; });
 theatre.addEventListener('close', () => afterClose(theatre));
-
-/* Index texture: static grain and soft fog patches, painted once (same feel as the first section) */
-(function idxTexture() {
-  const cv = $('#idxTex'); if (!cv) return;
-  const paint = () => {
-    const w = Math.max(64, Math.round(cv.clientWidth / 2)), h = Math.max(64, Math.round(cv.clientHeight / 2));
-    cv.width = w; cv.height = h;
-    const x = cv.getContext('2d'), r = rngSeed(53);
-    x.clearRect(0, 0, w, h);
-    const d = x.createImageData(w, h), a = d.data;   /* film grain: specks only, nothing in between */
-    for (let i = 0; i < a.length; i += 4) {
-      if (r() < .3) { const v = 170 + r() * 85; a[i] = a[i + 1] = a[i + 2] = v; a[i + 3] = 10 + r() * 26; }
-    }
-    x.putImageData(d, 0, 0);
-  };
-  paint();
-  let lastW = innerWidth;
-  addEventListener('resize', () => { if (Math.abs(innerWidth - lastW) > 40) { lastW = innerWidth; paint(); } });
-})();
 
 /* Contact: tattoo discs, same linework as the work section */
 (function tatDisc() {
