@@ -297,10 +297,14 @@ footer { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wr
   .v-actions #vLink { flex: 1; text-align: center; }
   .v-actions button { width: 48px; flex: none; }
   .th-frame { width: min(80vw, 360px); }
-  .th-nav { padding-inline: 16px; background: linear-gradient(to top, #070708 60%, rgba(7,7,8,0)); }
-  .th-close { top: .8rem; right: 16px; }
-  .th-grid { padding-top: 5.2rem; padding-bottom: 7rem; gap: 1.6rem; }
-  .th-num { top: 1rem; left: 16px; font-size: 3rem; opacity: .8; }
+  /* solid bars: the caption scrolls cleanly underneath instead of showing through */
+  .th-nav { z-index: 3; padding: .8rem 16px calc(.9rem + env(safe-area-inset-bottom, 0px)); background: #070708; }
+  .th-nav button { max-width: 46%; min-width: 0; gap: .25rem; }
+  .th-nav b { font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .th-close { top: .8rem; right: 16px; background: #070708; }
+  /* the piece scrolls in its own area between a top bar (number + Close) and the bottom bar, so nothing slides under them */
+  .th-grid { position: absolute; top: 3.6rem; left: 0; right: 0; bottom: 0; height: auto; padding-top: 1.6rem; padding-bottom: 7rem; gap: 1.6rem; }
+  .th-num { position: fixed; top: .75rem; left: 16px; font-size: 2.6rem; opacity: .8; z-index: 3; }
   /* performance: cheap layers only (no full-page blending, no animated shadows, lighter blur) */
   .grain { display: none; }
   .fog { filter: blur(16px); }
