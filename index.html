@@ -42,6 +42,17 @@ header nav a:hover { color: var(--red); }
 .work { position: relative; margin-inline: calc(clamp(16px, 4vw, 48px) * -1); }
 .pin { position: relative; min-height: min(100vh, 900px); overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; }
 #index { position: relative; }
+/* About: ink cherry-blossom branches in the right corners */
+#about { position: relative; overflow: hidden; }
+#about > :not(.bloom) { position: relative; z-index: 1; }
+.bloom { position: absolute; right: 0; width: clamp(220px, 34vw, 520px); color: var(--fg); opacity: .26; pointer-events: none; transform-origin: 100% 0; }
+.bloom svg { display: block; width: 100%; height: auto; }
+.bloom.tr { top: 0; animation: sway 9s ease-in-out infinite alternate; }
+.bloom.br { bottom: 0; transform-origin: 100% 100%; animation: sway 11s ease-in-out -4s infinite alternate; }
+.bloom .petal { animation: fall 14s linear infinite; }
+@keyframes sway { from { transform: rotate(-1.2deg); } to { transform: rotate(1.2deg); } }
+@keyframes fall { 0% { transform: translate(0, 0) rotate(0deg); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translate(-90px, 160px) rotate(220deg); opacity: 0; } }
+@media (max-width: 720px) { .bloom { width: 58vw; opacity: .16; } }
 #index > :not(.ink) { position: relative; z-index: 1; }
 .ink.ink-w { color: var(--fg); opacity: .07; -webkit-mask-image: linear-gradient(to bottom, transparent 35%, #000 85%); mask-image: linear-gradient(to bottom, transparent 35%, #000 85%); }
 .ink { position: absolute; inset: 0; pointer-events: none; color: var(--red); opacity: .2;
@@ -275,6 +286,8 @@ footer { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wr
   </section>
 
   <section class="sec" id="about">
+    <div class="bloom tr" id="bloomTop" aria-hidden="true"></div>
+    <div class="bloom br" id="bloomBottom" aria-hidden="true"></div>
     <div class="sec-head"><h2>About</h2><span class="small">Philippines</span></div>
     <p class="statement" id="statement">AI Creative crafting cinematic characters and concept pieces rooted in <span class="red">East Asian</span> and <span class="red">Anime aesthetics.</span></p>
     <div class="stats">
@@ -965,6 +978,41 @@ $('#thNext').addEventListener('click', () => thGo(1));
 $('#thClose').addEventListener('click', () => { theatre.close(); afterClose(theatre); });
 $('#thSound').addEventListener('click', () => { const v = thMedia().querySelector('video'); if (!v) return; v.muted = !v.muted; if (v.paused) v.play().catch(() => {}); $('#thSound').textContent = v.muted ? 'Unmute' : 'Mute'; });
 theatre.addEventListener('close', () => afterClose(theatre));
+
+/* About: cherry-blossom branches drawn as ink linework */
+(function blooms() {
+  const RED = '#D7141A', BG = '#0C0C0D';
+  const pol = (cx, cy, a, r) => `${(cx + Math.cos(a) * r).toFixed(1)} ${(cy + Math.sin(a) * r).toFixed(1)}`;
+  const blossom = (cx, cy, sz, rot) => {
+    let d = '';
+    for (let i = 0; i < 5; i++) {
+      const t = rot + i * Math.PI * 2 / 5;
+      d += `M${cx} ${cy} Q${pol(cx, cy, t - .58, sz * .66)} ${pol(cx, cy, t - .15, sz)} L${pol(cx, cy, t, sz * .78)} L${pol(cx, cy, t + .15, sz)} Q${pol(cx, cy, t + .58, sz * .66)} ${cx} ${cy}Z `;
+    }
+    let stamens = '';
+    for (let i = 0; i < 5; i++) { const t = rot + .63 + i * Math.PI * 2 / 5; stamens += `<line x1="${cx}" y1="${cy}" x2="${pol(cx, cy, t, sz * .42).split(' ')[0]}" y2="${pol(cx, cy, t, sz * .42).split(' ')[1]}" stroke="currentColor" stroke-width="1"/><circle cx="${pol(cx, cy, t, sz * .46).split(' ')[0]}" cy="${pol(cx, cy, t, sz * .46).split(' ')[1]}" r="${(sz * .06).toFixed(1)}" fill="${RED}"/>`; }
+    return `<path d="${d}" fill="${BG}" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>${stamens}<circle cx="${cx}" cy="${cy}" r="${(sz * .14).toFixed(1)}" fill="${RED}"/>`;
+  };
+  const bud = (cx, cy, sz, rot) => `<path d="M${cx} ${cy} Q${pol(cx, cy, rot - .5, sz)} ${pol(cx, cy, rot, sz * 1.4)} Q${pol(cx, cy, rot + .5, sz)} ${cx} ${cy}Z" fill="${BG}" stroke="currentColor" stroke-width="1.4"/><circle cx="${pol(cx, cy, rot, sz * .7).split(' ')[0]}" cy="${pol(cx, cy, rot, sz * .7).split(' ')[1]}" r="${(sz * .22).toFixed(1)}" fill="${RED}"/>`;
+  const petal = (x, y, s, rot, delay) => `<g class="petal" style="animation-delay:${delay}s"><path d="M${x} ${y} q${s * .6} ${-s * .5} ${s} 0 q${-s * .4} ${s * .6} ${-s} 0Z" transform="rotate(${rot} ${x} ${y})" fill="${BG}" stroke="currentColor" stroke-width="1.2"/></g>`;
+  const branch = (d, w) => `<path d="${d}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round"/>`;
+  const top = `<svg viewBox="0 0 520 330">
+    ${branch('M530 26 C 450 34, 384 66, 320 104 S 214 166, 150 176 S 80 190, 46 214', 5)}
+    ${branch('M352 86 C 340 60, 326 42, 300 22', 2.6)}${branch('M248 140 C 236 168, 228 196, 204 222', 2.6)}${branch('M150 176 C 136 160, 118 152, 96 150', 2)}
+    ${blossom(300, 22, 26, .3)}${blossom(320, 104, 30, 1.1)}${blossom(204, 222, 24, .7)}${blossom(150, 176, 22, 2.1)}${blossom(410, 58, 20, 1.6)}
+    ${bud(96, 150, 12, 3.4)}${bud(46, 214, 11, 2.6)}${bud(470, 40, 10, 4.4)}
+    ${petal(250, 250, 14, 20, 0)}${petal(120, 230, 11, -30, -6)}${petal(360, 170, 12, 60, -10)}
+  </svg>`;
+  const bottom = `<svg viewBox="0 0 520 300">
+    ${branch('M530 292 C 460 270, 410 236, 360 190 S 270 112, 214 92 S 140 76, 104 52', 5)}
+    ${branch('M392 220 C 372 246, 346 262, 316 268', 2.6)}${branch('M290 134 C 300 106, 304 82, 296 56', 2.4)}
+    ${blossom(360, 190, 30, .5)}${blossom(296, 56, 24, 1.9)}${blossom(214, 92, 26, 1.2)}${blossom(316, 268, 22, .2)}
+    ${bud(104, 52, 12, 3.6)}${bud(160, 80, 10, 4.1)}
+    ${petal(200, 170, 13, 40, -3)}${petal(120, 130, 10, -15, -9)}
+  </svg>`;
+  $('#bloomTop').innerHTML = top;
+  $('#bloomBottom').innerHTML = bottom;
+})();
 
 /* Contact: tattoo discs, same linework as the work section */
 (function tatDisc() {
