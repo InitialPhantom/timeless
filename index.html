@@ -33,7 +33,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .grain { display: none; }   /* no grain overlay */
 
 header { position: absolute; top: env(safe-area-inset-top, 0px); left: 0; right: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.4rem clamp(16px, 4vw, 48px); }
-.word { font: 400 2rem/1 var(--display); letter-spacing: .28em; text-decoration: none; }
+.word { display: inline-flex; align-items: center; gap: .9rem; text-decoration: none; }
+.word span { font: 400 1.8rem/1 var(--display); letter-spacing: .28em; margin-right: -.28em; text-shadow: 0 0 10px rgba(232,227,217,.22); }
+.word img { width: 40px; height: 40px; display: block; border-radius: 50%; filter: drop-shadow(0 0 5px rgba(232,227,217,.28)) drop-shadow(0 0 14px rgba(232,227,217,.12)); transition: filter .4s; }
+.word:hover img { filter: drop-shadow(0 0 6px rgba(232,227,217,.4)) drop-shadow(0 0 18px rgba(232,227,217,.18)); }
 header nav { display: flex; gap: 1.6rem; }
 header nav a { text-decoration: none; transition: color .2s; }
 header nav a:hover { color: var(--red); }
@@ -243,7 +246,9 @@ footer { display: flex; justify-content: flex-end; gap: 1rem; flex-wrap: wrap; b
   body { -webkit-tap-highlight-color: transparent; }
   /* header: wordmark only, no nav links */
   header { padding: 1rem 16px .4rem; }
-  .word { font-size: 1.3rem; letter-spacing: .24em; }
+  .word img { width: 33px; height: 33px; filter: drop-shadow(0 0 5px rgba(232,227,217,.3)); transition: none; }
+  .word { gap: .7rem; }
+  .word span { font-size: 1.35rem; letter-spacing: .24em; margin-right: -.24em; }
   header nav { display: none; }
   .work-head { padding-top: calc(3.6rem + env(safe-area-inset-top, 0px)); }
   /* work row: tighter, the footer keeps count, progress and arrows only */
@@ -327,7 +332,7 @@ footer { display: flex; justify-content: flex-end; gap: 1rem; flex-wrap: wrap; b
 <canvas class="grain" id="grain" aria-hidden="true"></canvas>
 
 <header>
-  <a class="word" href="#">TIMELESS</a>
+  <a class="word" href="#" aria-label="Timeless"><img src="favicon.svg?v=8" alt="" width="40" height="40"><span>TIMELESS</span></a>
   <nav class="small">
     <a href="#index">Index</a>
     <a href="#about">About</a>
