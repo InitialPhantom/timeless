@@ -30,7 +30,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 :focus-visible { outline: 1px solid var(--red); outline-offset: 4px; }
 .small { font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }
 
-.grain { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; opacity: .07; mix-blend-mode: overlay; }
+.grain { display: none; }   /* no grain overlay */
 
 header { position: absolute; top: env(safe-area-inset-top, 0px); left: 0; right: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.4rem clamp(16px, 4vw, 48px); }
 .word { font: 400 2rem/1 var(--display); letter-spacing: .28em; text-decoration: none; }
@@ -49,7 +49,7 @@ header nav .soc + .soc { margin-left: -.5rem; }
 .ink { position: absolute; inset: 0; pointer-events: none; color: var(--red); opacity: .2;
   -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 55%, #000 25%, transparent 78%); mask-image: radial-gradient(ellipse 85% 75% at 50% 55%, #000 25%, transparent 78%); }
 .ink svg { width: 100%; height: 100%; display: block; }
-.fog { position: absolute; inset: -8%; width: 116%; height: 116%; pointer-events: none; filter: blur(28px); opacity: .9; }
+.fog { display: none; }   /* first section: no fog */
 .work-head, .work-foot { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding-inline: clamp(16px, 4vw, 48px); }
 .work-head { padding-top: calc(5rem + env(safe-area-inset-top, 0px)); }
 .work-head h1 { font: 400 1.5rem/1 var(--display); letter-spacing: .2em; text-transform: uppercase; margin: 0; }
