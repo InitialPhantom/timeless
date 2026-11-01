@@ -517,6 +517,31 @@ const all = [
   "url": "https://x.com/Timeless_aiart/status/2087104545768018055"
  },
  {
+  "title": "Momo the Puppeteer.",
+  "date": "Oct 18, 2026",
+  "type": "Video",
+  "poster": "art/Den1ZtOvBA-.jpg",
+  "video": "video/Den1ZtOvBA-.mp4",
+  "text": [
+   "Made with Midjourney and Seedance 2.5 inside of Runway."
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/reel/Den1ZtOvBA-/"
+ },
+ {
+  "title": "\"Gods don't kneel\"",
+  "date": "Oct 25, 2026",
+  "type": "Video",
+  "poster": "art/De5uLocv5TC.jpg",
+  "video": "video/De5uLocv5TC.mp4",
+  "text": [
+   "It's been a while since I've done something past 30 seconds. This is probably a 2 month old piece that I've been keeping in the backlog for too long. I've been trying out some new things in background so I'll keep you guys updated on those too!",
+   "Made with Midjourney and Seedance 2.5 inside of Runway."
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/reel/De5uLocv5TC/"
+ },
+ {
   "title": "no soul left to save",
   "date": "Apr 26, 2026",
   "type": "Video",
@@ -616,6 +641,18 @@ const all = [
   "url": "https://x.com/Timeless_aiart/status/2086647227276239053"
  },
  {
+  "title": "The skies were the sea that day.",
+  "date": "Oct 27, 2026",
+  "type": "Video",
+  "poster": "art/De_C-6GP9wr.jpg",
+  "video": "video/De_C-6GP9wr.mp4",
+  "text": [
+   "Made with Midjourney and Seedance 2.5."
+  ],
+  "audio": "",
+  "url": "https://www.instagram.com/reel/De_C-6GP9wr/"
+ },
+ {
   "title": "Sazoku",
   "date": "Jul 2, 2026",
   "type": "Carousel · 7 images",
@@ -705,7 +742,7 @@ const all = [
   ]
  }
 ];
-const works = [3, 1, 0, 2, 4].map(i => all[i]), rest = all.slice(5);
+const works = [5, 3, 1, 0, 2, 4, 6].map(i => all[i]), rest = all.slice(7);
 
 /* Selected work: a sideways track pinned while the page scrolls */
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -907,7 +944,10 @@ const stats = {
   'https://www.instagram.com/reel/DdQVdxhP0LU/': [[360, "likes"], [17, "comments"]],
   'https://www.instagram.com/p/Dc-RMhkPZ3T/': [[476, "likes"], [13, "comments"]],
   'https://www.instagram.com/p/DbPbTpkFFDP/': [[2523, "likes"], [27, "comments"]],
-  'https://www.instagram.com/p/DaR0-LvlLuS/': [[5727, "likes"], [27, "comments"]]
+  'https://www.instagram.com/p/DaR0-LvlLuS/': [[5727, "likes"], [27, "comments"]],
+  'https://www.instagram.com/reel/Den1ZtOvBA-/': [[10970, "likes"], [49, "comments"]],
+  'https://www.instagram.com/reel/De5uLocv5TC/': [[163993, "likes"], [533, "comments"]],
+  'https://www.instagram.com/reel/De_C-6GP9wr/': [[233, "likes"], [8, "comments"]]
 };
 const fmt = v => v >= 1e6 ? (v / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : v >= 1e5 ? Math.round(v / 1e3) + 'K' : v >= 1e3 ? (v / 1e3).toFixed(1).replace(/\.0$/, '') + 'K' : String(v);
 const statLine = w => (stats[w.url] || []).map(([v, l]) => `<span>${fmt(v)} ${l}</span>`).join('<span aria-hidden="true">·</span>');
