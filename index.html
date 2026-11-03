@@ -254,8 +254,11 @@ footer .shell{display:flex;justify-content:flex-end;gap:12px;padding-block:4px 2
   .k{font-size:9.5px;letter-spacing:.16em}
   .coll{padding:14px}
   .coll h2{font-size:30px}
-  .tile[data-open=carousels] .coll{flex-direction:column;align-items:flex-start;gap:8px}
-  .tile[data-open=carousels] .coll h2{font-size:24px}
+  .tile[data-open] .coll{flex-direction:column;align-items:flex-start;gap:8px}
+  .tile[data-open] .coll h2{font-size:24px}
+  .tile[data-open] .wall{gap:6px}
+  .tile[data-open] .wall .col{gap:6px}
+  .tile[data-open] .wall img{border-radius:9px}
   .open{height:30px;padding:0 11px;font-size:11px;border-radius:10px}
   .about h1{font-size:26px;margin-top:4px}
   .about p{font-size:12.5px;line-height:1.55}
@@ -265,9 +268,11 @@ footer .shell{display:flex;justify-content:flex-end;gap:12px;padding-block:4px 2
   .contact h2{font-size:26px;margin-top:4px}
   .contact .btns{flex-direction:row;flex-wrap:wrap}
   .btn{height:34px;padding:0 12px;font-size:11.5px;border-radius:10px}
-  .partners .logos{gap:14px 22px}
-  .partners .mk{height:18px}.partners .wm{height:12.5px}.partners .wt{font-size:.98rem}
-  .lg.runway .wm{height:12px}.lg.topaz .mk{height:15px}.lg.hailuo .wm{height:11px}.lg.capcut .mk{height:14px}
+  .partners .logos{flex-direction:column;flex-wrap:nowrap;align-items:flex-start;justify-content:center;gap:12px;padding:2px 0 0}
+  .partners a{height:22px;opacity:.82}
+  .partners .mk{height:15px}.partners .wm{height:10.5px}.partners .wt{font-size:.82rem}
+  .lg.runway .wm{height:10px}.lg.topaz .mk{height:12.5px}.lg.hailuo .wm{height:9.5px}.lg.capcut .mk{height:11.5px}
+  .count strong{font-size:34px}
   .dm .pad{gap:8px}
   .dm .lead{font-size:11.5px;margin-top:4px}
   .dm textarea{min-height:44px;padding:8px 10px;font-size:12.5px}
@@ -408,11 +413,12 @@ function sizeGrid() {
   grid.querySelectorAll('.tile').forEach(t => {
     let w = Math.min(+t.dataset.w, cols), h = +t.dataset.h;
     if (cols === 2) {   // phones: a compact bento, Carousels and Followers side by side
-      const PH = { videos: [2, 3], carousels: [1, 2], count: [1, 2], about: [2, 2], partners: [2, 2], contact: [2, 2], dm: [2, 2] };
+      const PH = { videos: [1, 2], carousels: [1, 2], count: [1, 2], about: [2, 2], partners: [1, 2], contact: [2, 2], dm: [2, 2] };
       const key = t.dataset.open || [...t.classList].find(c => PH[c]);
       if (PH[key]) [w, h] = PH[key];
     }
-    t.style.order = cols === 2 && t.classList.contains('about') ? -1 : '';   // phones: About comes first
+    const ORDER = { about: 1, videos: 2, carousels: 3, partners: 4, count: 5, contact: 6, dm: 7 };   // phones: About first, then the pairs
+    t.style.order = cols === 2 ? ORDER[t.dataset.open || [...t.classList].find(c => ORDER[c])] || '' : '';
     t.style.setProperty('--cw', w); t.style.setProperty('--ch', h);
   });
 }
