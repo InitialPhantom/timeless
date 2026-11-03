@@ -235,8 +235,9 @@ footer .shell{display:flex;justify-content:flex-end;gap:12px;padding-block:4px 2
 .out:hover{background:#2b2b2f;scale:1.06}
 .out svg{width:17px;height:17px}
 .focus:not(.on) .out{opacity:0;scale:.85}
+@media (hover:none){.out{display:none}}   /* touch screens: no round arrows */
 @media (max-width:900px){
-  .layer .top .hint{display:none}
+  .out{display:none}   /* phones and tablets: no round arrows; swipe, the small arrows, or Back */
   .focus{flex-direction:column;justify-content:flex-start;gap:12px;padding:6px var(--pad) 18px;overflow-y:auto}
   .fstack{width:100%;align-items:center}
   .fcard{height:auto;width:min(100%,calc(54svh * var(--arn,.75)));max-width:100%;flex:none}
@@ -577,7 +578,7 @@ $('#rPrev').onclick = () => goTo(idx - 1); $('#rNext').onclick = () => goTo(idx 
 
 function openCollection(which, tile) {
   kind = which; srcTile = tile; list = which === 'videos' ? videos : cars;
-  $('#cTitle').innerHTML = `${which === 'videos' ? 'Videos' : 'Carousels'}<sup>${list.length}</sup>`;
+  $('#cTitle').textContent = which === 'videos' ? 'Videos' : 'Carousels';
   document.body.classList.add('locked');
   cLayer.classList.add('show'); buildRail(); goTo(0, true); tick();
   expand(cLayer, tile.querySelector('.face').getBoundingClientRect(), 22);
