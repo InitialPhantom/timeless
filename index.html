@@ -268,11 +268,13 @@ footer .shell{display:flex;justify-content:flex-end;gap:12px;padding-block:4px 2
   .contact h2{font-size:26px;margin-top:4px}
   .contact .btns{flex-direction:row;flex-wrap:wrap}
   .btn{height:34px;padding:0 12px;font-size:11.5px;border-radius:10px}
-  .partners .logos{flex-direction:column;flex-wrap:nowrap;align-items:flex-start;justify-content:center;gap:12px;padding:2px 0 0}
-  .partners a{height:22px;opacity:.82}
-  .partners .mk{height:15px}.partners .wm{height:10.5px}.partners .wt{font-size:.82rem}
-  .lg.runway .wm{height:10px}.lg.topaz .mk{height:12.5px}.lg.hailuo .wm{height:9.5px}.lg.capcut .mk{height:11.5px}
-  .count strong{font-size:34px}
+  .partners .logos{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;align-content:center;gap:12px 12px;padding:0}
+  .partners a{height:18px;gap:.35rem;opacity:.82}
+  .partners .mk{height:12px}.partners .wm{height:8.5px}.partners .wt{font-size:.66rem}
+  .lg.runway .wm{height:8px}.lg.topaz .mk{height:10px}.lg.hailuo .wm{height:7.5px}.lg.capcut .mk{height:9.5px}
+  .count .pad{justify-content:space-between}
+  .count strong{font-size:32px}
+  .count p{font-size:10.5px;line-height:1.4;margin-top:4px}
   .dm .pad{gap:8px}
   .dm .lead{font-size:11.5px;margin-top:4px}
   .dm textarea{min-height:44px;padding:8px 10px;font-size:12.5px}
@@ -409,11 +411,12 @@ function sizeGrid() {
   const W = grid.clientWidth; if (!W) return;
   const cols = W >= 1000 ? 6 : W >= 640 ? 3 : 2, c = (W - 10 * (cols - 1)) / cols;
   grid.style.setProperty('--cols', cols);
-  grid.style.setProperty('--rowh', ((c * 4 / 3 - 10) / 2) + 'px');
+  /* phones use finer rows (three of them make a square) so Partners and Followers can be exact squares */
+  grid.style.setProperty('--rowh', (cols === 2 ? (c - 20) / 3 : (c * 4 / 3 - 10) / 2) + 'px');
   grid.querySelectorAll('.tile').forEach(t => {
     let w = Math.min(+t.dataset.w, cols), h = +t.dataset.h;
     if (cols === 2) {   // phones: a compact bento, Carousels and Followers side by side
-      const PH = { videos: [1, 2], carousels: [1, 2], count: [1, 2], about: [2, 2], partners: [1, 2], contact: [2, 2], dm: [2, 2] };
+      const PH = { videos: [1, 4], carousels: [1, 4], partners: [1, 3], count: [1, 3], about: [2, 4], contact: [2, 4], dm: [2, 4] };
       const key = t.dataset.open || [...t.classList].find(c => PH[c]);
       if (PH[key]) [w, h] = PH[key];
     }
