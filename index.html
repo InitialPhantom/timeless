@@ -58,8 +58,8 @@ img,video{display:block}
 
 /* collection tiles: columns of the work drifting slowly */
 .wall{position:absolute;inset:-6% -2%;display:flex;gap:8px;transform:rotate(-4deg) scale(1.08)}
-.wall .col{flex:1;display:flex;flex-direction:column;gap:8px;animation:drift var(--d,60s) linear infinite}
-.wall .col:nth-child(2n){animation-direction:reverse}
+.wall .col{flex:1;display:flex;flex-direction:column;gap:8px;animation:drift var(--d,60s) ease-in-out infinite alternate}
+.wall .col:nth-child(2n){animation-direction:alternate-reverse}
 .wall img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;background:var(--pill)}
 @keyframes drift{to{transform:translateY(-50%)}}
 .tile.open-able:hover .wall .col{animation-play-state:paused}
@@ -108,9 +108,24 @@ img,video{display:block}
 .dm .btn{flex:none;border:0;cursor:pointer}
 .dm .btn[disabled]{opacity:.6;cursor:default}
 .dm .note{min-height:16px;font-size:12px;color:var(--muted)}
-.dm .note.ok{color:#B9D9B9}
+.dm .note.ok{color:var(--text)}
 .dm .note.err{color:#F3B7B9}
 .dm .sent textarea,.dm .sent .row{display:none}
+.dm .sent{justify-content:center;align-items:center;text-align:center}
+.dm .sent > div:first-child{position:absolute;left:clamp(16px,1.8vw,26px);top:clamp(16px,1.8vw,26px);text-align:left}
+.dm .sent .lead{display:none}
+.mail{position:absolute;left:50%;top:50%;translate:-50% -50%;width:92px;height:64px;overflow:visible;color:var(--text);pointer-events:none}
+.mail .env{transform-box:fill-box;transform-origin:50% 50%;animation:mailIn .5s var(--ease) both,mailOut .75s cubic-bezier(.55,0,.75,.2) 1.25s forwards}
+.mail .flap{transform-box:fill-box;transform-origin:50% 0;animation:flapShut .45s var(--ease) .45s both}
+.mail .seal{transform-box:fill-box;transform-origin:50% 50%;animation:sealPop .4s var(--spring) .85s both}
+.mail .trail{stroke-dasharray:120;stroke-dashoffset:120;animation:trail .8s var(--ease) 1.35s forwards}
+@keyframes mailIn{from{opacity:0;transform:translateY(10px) scale(.9)}to{opacity:1;transform:none}}
+@keyframes flapShut{from{transform:scaleY(-1)}to{transform:scaleY(1)}}
+@keyframes sealPop{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
+@keyframes mailOut{to{opacity:0;transform:translate(150px,-56px) rotate(-12deg) scale(.7);filter:blur(1.5px)}}
+@keyframes trail{0%{stroke-dashoffset:120;opacity:.9}100%{stroke-dashoffset:0;opacity:0}}
+.dm .sent .note{max-width:30ch;margin:0 auto;font-size:13px;line-height:1.55;animation:noteUp .6s var(--ease) 1.9s both}
+@keyframes noteUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .hp{position:absolute;left:-9999px;opacity:0;pointer-events:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* contact: the tattoo discs from the live site, sized to sit inside the tile */
@@ -292,7 +307,7 @@ footer .shell{display:flex;justify-content:flex-end;gap:12px;padding-block:4px 2
     </article>
     <article class="tile about" data-w="3" data-h="2">
       <div class="face"><img class="disc" id="disc" src="favicon.svg" alt="" draggable="false">
-        <div class="pad"><div><span class="k">About</span><h1>Hey, I&rsquo;m Timeless.</h1></div>
+        <div class="pad"><div><span class="k">About · Philippines</span><h1>Hey, I&rsquo;m Timeless.</h1></div>
           <p><b>AI Creative</b> crafting <b>cinematic characters</b> and <b>concept pieces</b> rooted in <em>East Asian</em> and <em>Anime</em> aesthetics.</p>
           <div class="row"><span class="last">last posted <span>The skies were the sea that day.</span></span></div></div>
         <span class="glare"></span></div>
@@ -692,6 +707,14 @@ $('#home').addEventListener('click', e => { e.preventDefault(); scrollTo({ top: 
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j.success) throw new Error(j.message || 'failed');
       f.classList.add('sent'); f.reset();
+      note.insertAdjacentHTML('beforebegin', `<svg class="mail" viewBox="0 0 92 64" aria-hidden="true">
+        <path class="trail" d="M10 52 C 40 50, 70 30, 112 6" fill="none" stroke="#D7141A" stroke-width="1.2" stroke-linecap="round"/>
+        <g class="env" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
+          <rect x="16" y="14" width="60" height="40" rx="4" fill="#151517"/>
+          <path d="M16 50 L38 33 M76 50 L54 33" opacity=".45"/>
+          <path class="flap" d="M16 14 L46 38 L76 14" fill="#1B1B1E"/>
+          <circle class="seal" cx="46" cy="38" r="4.5" fill="#D7141A" stroke="none"/>
+        </g></svg>`);
       say('Thank you. Your message is on its way to me, and I’ll reply to your email soon.', 'ok');
     } catch {
       say('Sorry, that didn’t send. Please try again, or message me on Instagram.', 'err');
