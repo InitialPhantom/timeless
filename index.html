@@ -406,7 +406,8 @@ const fmt = v => v >= 1e6 ? (v / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : v >
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const videos = PIECES.filter(p => p.video), cars = PIECES.filter(p => p.slides);
+const byNew = (a, b) => (b.isNew ? Date.parse(b.date) : 0) - (a.isNew ? Date.parse(a.date) : 0);   // New pieces lead, newest first; the rest keep their order
+const videos = PIECES.filter(p => p.video).sort(byNew), cars = PIECES.filter(p => p.slides).sort(byNew);
 const ARS = p => p.size === 'wide' ? '968 / 720' : p.slides ? '4 / 5' : '3 / 4';
 
 /* ---------- the bento: 6 columns on desktop, 3 on tablets, 2 on phones; a 1 x 2 cell is 3:4 ---------- */
